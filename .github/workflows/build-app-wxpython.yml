@@ -9,17 +9,27 @@ on:
 jobs:
   build:
     name: Build wxPython
-    runs-on: x86_64_mojave
+    runs-on: macos-latest
+
     env:
       branch: ${{ github.ref }}
       commiturl: ${{ github.event.head_commit.url }}${{ github.event.release.html_url }}
       commitdate: ${{ github.event.head_commit.timestamp }}${{ github.event.release.published_at }}
+
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python
+        run: |
+          wget https://www.python.org/ftp/python/3.9.13/python-3.9.13-macosx10.9.pkg
+          sudo installer -pkg python-3.9.13-macosx10.9.pkg -target /
+          pip3 install -r requirements.txt
+      - name: Download Packages installer build tool
+        run: |
+            wget http://s.sudre.free.fr/Software/files/Packages.dmg
+            hdiutil attach Packages.dmg
+            sudo installer -pkg /Volumes/Packages\ 1.2.10/Install\ Packages.pkg -target /
       - run: /Library/Frameworks/Python.framework/Versions/3.9/bin/python3 Build-Binary.command --reset_binaries --branch "${{ env.branch }}" --commit "${{ env.commiturl }}" --commit_date "${{ env.commitdate }}"
-      - run: 'codesign -s "Developer ID Application: Mykola Grymalyuk (S74BDJXQMD)" -v --force --deep --timestamp --entitlements ./payloads/entitlements.plist -o runtime "dist/OpenCore-Patcher.app"'
       - run: cd dist; ditto -c -k --sequesterRsrc --keepParent OpenCore-Patcher.app ../OpenCore-Patcher-wxPython.app.zip
-      - run: ./../sign-wxpython.sh
       - run: packagesbuild ./payloads/InstallPackage/AutoPkg-Assets-Setup.pkgproj
       - run: mv ./OpenCore-Patcher-wxPython.app.zip ./OpenCore-Patcher-GUI.app.zip
       - name: Upload App to Artifacts
@@ -27,11 +37,13 @@ jobs:
         with:
           name: OpenCore-Patcher.app (GUI)
           path: OpenCore-Patcher-GUI.app.zip
+
       - name: Upload Package to Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: AutoPkg-Assets.pkg
           path: ./dist/AutoPkg-Assets.pkg
+
       - name: Upload Binary to Release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
@@ -40,6 +52,7 @@ jobs:
           file: OpenCore-Patcher-GUI.app.zip
           tag: ${{ github.ref }}
           file_glob: true
+
       - name: Upload Package to Release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@e74ff71f7d8a4c4745b560a485cc5fdb9b5b999d
