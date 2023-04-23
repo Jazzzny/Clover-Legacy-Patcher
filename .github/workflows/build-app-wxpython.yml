@@ -28,7 +28,7 @@ jobs:
             wget http://s.sudre.free.fr/Software/files/Packages.dmg
             hdiutil attach Packages.dmg
             sudo installer -pkg /Volumes/Packages\ 1.2.10/Install\ Packages.pkg -target /
-      - run: /Library/Frameworks/Python.framework/Versions/3.9/bin/python3 Build-Binary.command --reset_binaries --branch "${{ env.branch }}" --commit "${{ env.commiturl }}" --commit_date "${{ env.commitdate }}"
+      - run: /Library/Frameworks/Python.framework/Versions/3.8/bin/python3 Build-Binary.command --reset_binaries --branch "${{ env.branch }}" --commit "${{ env.commiturl }}" --commit_date "${{ env.commitdate }}"
       - run: cd dist; ditto -c -k --sequesterRsrc --keepParent OpenCore-Patcher.app ../OpenCore-Patcher-wxPython.app.zip
       - run: packagesbuild ./payloads/InstallPackage/AutoPkg-Assets-Setup.pkgproj
       - run: mv ./OpenCore-Patcher-wxPython.app.zip ./OpenCore-Patcher-GUI.app.zip
