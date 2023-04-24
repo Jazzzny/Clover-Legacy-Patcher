@@ -44,13 +44,13 @@ class GenerateRootPatchSets:
 
         if self.hardware_details["Graphics: Intel Ironlake"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
             required_patches.update({"Intel Ironlake": all_hardware_patchset["Graphics"]["Intel Ironlake"]})
 
         if self.hardware_details["Graphics: Intel Sandy Bridge"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"High Sierra GVA": all_hardware_patchset["Graphics"]["High Sierra GVA"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
             required_patches.update({"Intel Sandy Bridge": all_hardware_patchset["Graphics"]["Intel Sandy Bridge"]})
@@ -86,13 +86,13 @@ class GenerateRootPatchSets:
 
         if self.hardware_details["Graphics: Nvidia Tesla"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
             required_patches.update({"Nvidia Tesla": all_hardware_patchset["Graphics"]["Nvidia Tesla"]})
 
         if self.hardware_details["Graphics: Nvidia Web Drivers"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
             required_patches.update({"Non-Metal CoreDisplay Common": all_hardware_patchset["Graphics"]["Non-Metal CoreDisplay Common"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
@@ -116,14 +116,14 @@ class GenerateRootPatchSets:
 
         if self.hardware_details["Graphics: AMD TeraScale 1"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
             required_patches.update({"AMD TeraScale Common": all_hardware_patchset["Graphics"]["AMD TeraScale Common"]})
             required_patches.update({"AMD TeraScale 1": all_hardware_patchset["Graphics"]["AMD TeraScale 1"]})
 
         if self.hardware_details["Graphics: AMD TeraScale 2"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
-            required_patches.update({"Legacy System Applications": all_hardware_patchset["Graphics"]["Legacy System Applications"]})
+            required_patches.update({"Legacy System Applications": all_hardware_patchset["Miscellaneous"]["Legacy System Applications"]})
             required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
             required_patches.update({"AMD TeraScale Common": all_hardware_patchset["Graphics"]["AMD TeraScale Common"]})
