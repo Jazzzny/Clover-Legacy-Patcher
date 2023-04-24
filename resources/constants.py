@@ -13,11 +13,11 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         self.patcher_version:                 str = "0.6.5"  # OpenCore-Legacy-Patcher
-        self.patcher_support_pkg_version:     str = "0.9.6"  # PatcherSupportPkg
+        self.patcher_support_pkg_version:     str = "0.9.7"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2023 Dortania"
 
         # URLs
-        self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
+        self.url_patcher_support_pkg:         str = "https://github.com/Jazzzny/PatcherSupportPkg-Dev/releases/download/"
         self.discord_link:                    str = "https://discord.gg/rqdPgH8xSN"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
         self.repo_link:                       str = "https://github.com/dortania/OpenCore-Legacy-Patcher"
