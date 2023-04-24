@@ -103,9 +103,6 @@ class SystemPatchDictionary():
                             "GPUSupport.framework": "10.14.3",
                             "SkyLight.framework":  f"10.14.6-{self.os_major}",
                         },
-                        "/System/Applications": {
-                            "Photo\ Booth.app": "11.7.6",
-                        },
                     },
                     "Remove": {
                         "/System/Library/Extensions": [
@@ -1184,6 +1181,25 @@ class SystemPatchDictionary():
                     "Install": {
                         "/System/Library/Extensions": {
                             "IOUSBHostFamily.kext": "12.6.2",
+                        },
+                    },
+                },
+                # Fix various built-in applications by downgrading to the last versions not requiring Metal support
+                "Legacy System Applications": {
+                    "Display Name": "Miscellaneous: Legacy System Applications",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": self.non_metal_os_support[0],
+                            "OS Minor": 0
+                        },
+                        "Maximum OS Support": {
+                            "OS Major": self.non_metal_os_support[-1],
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Applications": {
+                            "Photo\ Booth.app": "11.7.6",
                         },
                     },
                 }
