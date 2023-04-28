@@ -9,49 +9,29 @@ on:
 jobs:
   build:
     name: Build wxPython
-    runs-on: x86_64_monterey
-    if: github.repository_owner == 'dortania'
+    runs-on: macos-latest
 
     env:
       branch: ${{ github.ref }}
       commiturl: ${{ github.event.head_commit.url }}${{ github.event.release.html_url }}
       commitdate: ${{ github.event.head_commit.timestamp }}${{ github.event.release.published_at }}
-      MAC_CODESIGN_IDENTITY: ${{ secrets.MAC_CODESIGN_IDENTITY }}
-      MAC_CODESIGN_CERT: ${{ secrets.MAC_CODESIGN_CERT }}
-      MAC_NOTARIZATION_USERNAME: ${{ secrets.MAC_NOTARIZATION_USERNAME }}
-      MAC_NOTARIZATION_PASSWORD: ${{ secrets.MAC_NOTARIZATION_PASSWORD }}
-      MAC_NOTARIZATION_TEAM_ID: ${{ secrets.MAC_NOTARIZATION_TEAM_ID }}
-      ANALYTICS_KEY: ${{ secrets.ANALYTICS_KEY }}
-      ANALYTICS_SITE: ${{ secrets.ANALYTICS_SITE }}
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Build Binary
-        run: /Library/Frameworks/Python.framework/Versions/3.10/bin/python3 Build-Binary.command --reset_binaries --branch "${{ env.branch }}" --commit "${{ env.commiturl }}" --commit_date "${{ env.commitdate }}" --key "${{ env.ANALYTICS_KEY }}" --site "${{ env.ANALYTICS_SITE }}"
-
-      # Uncomment when using Github Runners or first run on self-hosted
-      # - name: Import Certificate
-      #   uses: apple-actions/import-codesign-certs@v1
-      #   with:
-      #     p12-file-base64: ${{ secrets.MAC_CODESIGN_CERT }}
-      #     p12-password: ${{ secrets.MAC_NOTARIZATION_PASSWORD }}
-
-      - name: Codesign Binary
-        run: 'codesign -s "${{ env.MAC_CODESIGN_IDENTITY }}" -v --force --deep --timestamp --entitlements ./payloads/entitlements.plist -o runtime "dist/OpenCore-Patcher.app"'
-
-      - name: Package Binary
-        run: cd dist; ditto -c -k --sequesterRsrc --keepParent OpenCore-Patcher.app ../OpenCore-Patcher-wxPython.app.zip
-
-      - name: Notarize Binary
-        run: xcrun notarytool submit OpenCore-Patcher-wxPython.app.zip --apple-id "${{ env.MAC_NOTARIZATION_USERNAME }}" --password "${{ env.MAC_NOTARIZATION_PASSWORD }}" --team-id "${{ env.MAC_NOTARIZATION_TEAM_ID }}"
-
-      - name: Generate support package
-        run: packagesbuild ./payloads/InstallPackage/AutoPkg-Assets-Setup.pkgproj
-
-      - name: Prepare App for Upload
-        run: mv ./OpenCore-Patcher-wxPython.app.zip ./OpenCore-Patcher-GUI.app.zip
-
+      - name: Set up Python
+        run: |
+          wget https://www.python.org/ftp/python/3.10.9/python-3.10.9-macos11.pkg
+          sudo installer -pkg python-3.10.9-macos11.pkg -target /
+          pip3 install -r requirements.txt
+      - name: Download Packages installer build tool
+        run: |
+            wget http://s.sudre.free.fr/Software/files/Packages.dmg
+            hdiutil attach Packages.dmg
+            sudo installer -pkg /Volumes/Packages\ 1.2.10/Install\ Packages.pkg -target /
+      - run: /Library/Frameworks/Python.framework/Versions/3.10/bin/python3 Build-Binary.command --reset_binaries --branch "${{ env.branch }}" --commit "${{ env.commiturl }}" --commit_date "${{ env.commitdate }}"
+      - run: cd dist; ditto -c -k --sequesterRsrc --keepParent OpenCore-Patcher.app ../OpenCore-Patcher-wxPython.app.zip
+      - run: packagesbuild ./payloads/InstallPackage/AutoPkg-Assets-Setup.pkgproj
+      - run: mv ./OpenCore-Patcher-wxPython.app.zip ./OpenCore-Patcher-GUI.app.zip
       - name: Upload App to Artifacts
         uses: actions/upload-artifact@v3
         with:
