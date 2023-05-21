@@ -137,9 +137,9 @@ class InstallerCreation():
         plist_path = str(Path(installer_path) / Path("Contents/Info.plist"))
 
         # Patch Ventura installer on Yosemite:
-        if platform_version == "13" and os_ver == os_data.os_data.yosemite:
-            osinstallersetup_path = str(Path(installer_path) / Path("Contents/Frameworks/OSInstallerSetup.framework"))
-            osinstallersetup_usbpath = str(Path("/Volumes/Install macOS Ventura/Install macOS Ventura.app/Contents/Frameworks/OSInstallerSetup.framework"))
+        #if platform_version == "13" and os_ver == os_data.os_data.yosemite:
+        #    osinstallersetup_path = str(Path(installer_path) / Path("Contents/Frameworks/OSInstallerSetup.framework"))
+        #    osinstallersetup_usbpath = str(Path("/Volumes/Install macOS Ventura/Install macOS Ventura.app/Contents/Frameworks/OSInstallerSetup.framework"))
 
         if Path(plist_path).exists():
             plist = plistlib.load(Path(plist_path).open("rb"))
@@ -154,7 +154,7 @@ class InstallerCreation():
             script_location.unlink()
         script_location.touch()
 
-        if platform_version == "13" and os_ver == os_data.os_data.yosemite:
+        if 1+1 == 2:#platform_version == "13" and os_ver == os_data.os_data.yosemite:
             with script_location.open("w") as script:
                 script.write(f'''#!/bin/bash
 erase_disk='diskutil eraseDisk HFS+ OCLP-Installer {disk}'
