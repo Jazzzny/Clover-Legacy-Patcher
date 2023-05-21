@@ -159,12 +159,12 @@ class InstallerCreation():
                 script.write(f'''#!/bin/bash
 erase_disk='diskutil eraseDisk HFS+ OCLP-Installer {disk}'
 if $erase_disk; then
-    find {installer_path}/Contents/Frameworks -mindepth 1 -maxdepth 1 -type d ! -path {installer_path}/Contents/Frameworks -execdir mv {{}} {{}}.bak \;
-    mv "{frameworks_path}/{os_ver}/* {installer_path}/Contents/Frameworks/
-    unzip {installer_path}/Contents/Frameworks/'*.zip' -d {installer_path}/Contents/Frameworks/
+    find "{installer_path}"/Contents/Frameworks -mindepth 1 -maxdepth 1 -type d ! -path "{installer_path}"/Contents/Frameworks -execdir mv {{}} {{}}.bak \;
+    mv "{frameworks_path}"/{os_ver}/* "{installer_path}"/Contents/Frameworks/
+    unzip "{installer_path}"/Contents/Frameworks/'*.zip' -d "{installer_path}"/Contents/Frameworks/
     "{createinstallmedia_path}" --volume /Volumes/OCLP-Installer --nointeraction{additional_args}
 fi
-                ''')
+            ''')
         else:
             with script_location.open("w") as script:
                 script.write(f'''#!/bin/bash
@@ -172,7 +172,7 @@ erase_disk='diskutil eraseDisk HFS+ OCLP-Installer {disk}'
 if $erase_disk; then
     "{createinstallmedia_path}" --volume /Volumes/OCLP-Installer --nointeraction{additional_args}
 fi
-                ''')
+            ''')
         if Path(script_location).exists():
             return True
         return False
