@@ -340,7 +340,7 @@ class macOSInstallerFlashFrame(wx.Frame):
     def _prepare_resources(self, installer_path: str, disk: str) -> None:
 
         def prepare_script(self, installer_path: str, disk: str, constants: constants.Constants):
-            self.prepare_result = macos_installer_handler.InstallerCreation().generate_installer_creation_script(constants.payload_path, installer_path, disk)
+            self.prepare_result = macos_installer_handler.InstallerCreation().generate_installer_creation_script(constants.payload_path, installer_path, disk, constants.detected_os, constants.frameworks_folder)
 
         thread = threading.Thread(target=prepare_script, args=(self, installer_path, disk, self.constants))
         thread.start()

@@ -630,6 +630,11 @@ class Constants:
     @property
     def rsrrepair_userspace_path(self):
         return self.payload_path / Path("Tools/RSRRepair")
+    
+    # Frameworks
+    @property
+    def frameworks_folder(self):
+        return self.payload_path / Path("Frameworks")
 
     # Icons
     @property

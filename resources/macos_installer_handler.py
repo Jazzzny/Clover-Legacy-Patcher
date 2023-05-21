@@ -70,7 +70,7 @@ class InstallerCreation():
         return True
 
 
-    def generate_installer_creation_script(self, tmp_location: str, installer_path: str, disk: str) -> bool:
+    def generate_installer_creation_script(self, tmp_location: str, installer_path: str, disk: str, os_ver: int, frameworks_path: str) -> bool:
         """
         Creates installer.sh to be piped to OCLP-Helper and run as admin
 
@@ -85,11 +85,13 @@ class InstallerCreation():
             tmp_location (str): Path to temporary directory
             installer_path (str): Path to InstallAssistant.pkg
             disk (str): Disk to install to
+            os_ver (int): Major macOS version. Used to determine whether or not an installer needs to be patched to run createinstallmedia
+            frameworks_path (str): Path to the frameworks directory
 
         Returns:
             bool: True if successful, False otherwise
         """
-
+        
         additional_args = ""
         script_location = Path(tmp_location) / Path("Installer.sh")
 
@@ -133,6 +135,12 @@ class InstallerCreation():
 
         createinstallmedia_path = str(Path(installer_path) / Path("Contents/Resources/createinstallmedia"))
         plist_path = str(Path(installer_path) / Path("Contents/Info.plist"))
+
+        # Patch Ventura installer on Yosemite:
+        if platform_version == "13" and os_ver == os_data.os_data.yosemite:
+            osinstallersetup_path = str(Path(installer_path) / Path("Contents/Frameworks/OSInstallerSetup.framework"))
+            osinstallersetup_usbpath = str(Path("/Volumes/Install macOS Ventura/Install macOS Ventura.app/Contents/Frameworks/OSInstallerSetup.framework"))
+
         if Path(plist_path).exists():
             plist = plistlib.load(Path(plist_path).open("rb"))
             if "DTPlatformVersion" in plist:
@@ -146,13 +154,25 @@ class InstallerCreation():
             script_location.unlink()
         script_location.touch()
 
-        with script_location.open("w") as script:
-            script.write(f'''#!/bin/bash
+        if platform_version == "13" and os_ver == os_data.os_data.yosemite:
+            with script_location.open("w") as script:
+                script.write(f'''#!/bin/bash
+erase_disk='diskutil eraseDisk HFS+ OCLP-Installer {disk}'
+if $erase_disk; then
+    find {installer_path}/Contents/Frameworks -mindepth 1 -maxdepth 1 -type d ! -path {installer_path}/Contents/Frameworks -execdir mv {{}} {{}}.bak \;
+    mv "{frameworks_path}/{os_ver}/* {installer_path}/Contents/Frameworks/
+    unzip {installer_path}/Contents/Frameworks/'*.zip' -d {installer_path}/Contents/Frameworks/
+    "{createinstallmedia_path}" --volume /Volumes/OCLP-Installer --nointeraction{additional_args}
+fi
+                ''')
+        else:
+            with script_location.open("w") as script:
+                script.write(f'''#!/bin/bash
 erase_disk='diskutil eraseDisk HFS+ OCLP-Installer {disk}'
 if $erase_disk; then
     "{createinstallmedia_path}" --volume /Volumes/OCLP-Installer --nointeraction{additional_args}
 fi
-            ''')
+                ''')
         if Path(script_location).exists():
             return True
         return False
@@ -557,7 +577,7 @@ class LocalInstallerCatalog:
             if min_required == os_data.os_data.sierra and kernel == os_data.os_data.ventura:
                 # Ventura's installer requires El Capitan minimum
                 # Ref: https://github.com/dortania/OpenCore-Legacy-Patcher/discussions/1038
-                min_required = os_data.os_data.el_capitan
+                min_required = os_data.os_data.yosemite
 
             # app_version can sometimes report GM instead of the actual version
             # This is a workaround to get the actual version
