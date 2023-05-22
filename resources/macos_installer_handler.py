@@ -136,11 +136,6 @@ class InstallerCreation():
         createinstallmedia_path = str(Path(installer_path) / Path("Contents/Resources/createinstallmedia"))
         plist_path = str(Path(installer_path) / Path("Contents/Info.plist"))
 
-        # Patch Ventura installer on Yosemite:
-        #if platform_version == "13" and os_ver == os_data.os_data.yosemite:
-        #    osinstallersetup_path = str(Path(installer_path) / Path("Contents/Frameworks/OSInstallerSetup.framework"))
-        #    osinstallersetup_usbpath = str(Path("/Volumes/Install macOS Ventura/Install macOS Ventura.app/Contents/Frameworks/OSInstallerSetup.framework"))
-
         if Path(plist_path).exists():
             plist = plistlib.load(Path(plist_path).open("rb"))
             if "DTPlatformVersion" in plist:
@@ -162,7 +157,10 @@ if $erase_disk; then
     find "{installer_path}"/Contents/Frameworks -mindepth 1 -maxdepth 1 -type d ! -path "{installer_path}"/Contents/Frameworks -execdir mv {{}} {{}}.bak \;
     mv "{frameworks_path}"/{os_ver}/* "{installer_path}"/Contents/Frameworks/
     unzip "{installer_path}"/Contents/Frameworks/'*.zip' -d "{installer_path}"/Contents/Frameworks/
+    rm "{installer_path}"/Contents/Frameworks/*.zip
     "{createinstallmedia_path}" --volume /Volumes/OCLP-Installer --nointeraction{additional_args}
+    find "{installer_path}"/Contents/Frameworks -type d -name "*.bak" -exec sh -c 'mv "$0" "${{0%.bak}}"' {{}} \;
+
 fi
             ''')
         else:
