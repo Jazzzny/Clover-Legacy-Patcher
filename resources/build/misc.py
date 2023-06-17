@@ -106,23 +106,6 @@ class BuildMiscellaneous:
             logging.info("- Disabling memory error reporting")
             re_block_args.append("pcie")
 
-        # Resolve mediaanalysisd crashing on 3802 GPUs
-        gpu_dict = [] if self.constants.custom_model else self.constants.computer.gpus
-        if gpu_dict == []:
-            gpu_dict = smbios_data.smbios_dictionary[self.model]["Stock GPUs"] if self.model in smbios_data.smbios_dictionary else []
-
-        for gpu in gpu_dict:
-            if not self.constants.custom_model:
-                gpu = gpu.arch
-            if gpu in [
-                device_probe.Intel.Archs.Ivy_Bridge,
-                device_probe.Intel.Archs.Haswell,
-                device_probe.NVIDIA.Archs.Kepler,
-            ]:
-                logging.info("- Disabling mediaanalysisd")
-                re_block_args.append("media")
-                break
-
         return re_block_args
 
 
@@ -143,7 +126,7 @@ class BuildMiscellaneous:
 
         # Resolve CoreGraphics.framework crashing on Ivy Bridge in macOS 13.3+
         # Ref: https://github.com/acidanthera/RestrictEvents/pull/12
-        if smbios_data.smbios_dictionary[self.model]["CPU Generation"] == cpu_data.cpu_data.ivy_bridge.value:
+        if smbios_data.smbios_dictionary[self.model]["CPU Generation"] == cpu_data.CPUGen.ivy_bridge.value:
             logging.info("- Fixing CoreGraphics support on Ivy Bridge")
             re_patch_args.append("f16c")
 
@@ -193,7 +176,7 @@ class BuildMiscellaneous:
         """
 
         # Pre-Force Touch trackpad & keyboard support for macOS Ventura
-        if smbios_data.smbios_dictionary[self.model]["CPU Generation"] < cpu_data.cpu_data.skylake.value:
+        if smbios_data.smbios_dictionary[self.model]["CPU Generation"] < cpu_data.CPUGen.skylake.value:
             if self.model.startswith("MacBook"):
                 # These units got force touch & the new keyboard mapping early, so ignore them
                 if self.model not in ["MacBookPro11,4", "MacBookPro11,5", "MacBookPro12,1", "MacBook8,1"]:
@@ -265,7 +248,7 @@ class BuildMiscellaneous:
         #
         # To be paired for sys_patch_dict.py's 'Legacy USB 1.1' patchset
         if (
-            smbios_data.smbios_dictionary[self.model]["CPU Generation"] <= cpu_data.cpu_data.penryn.value or \
+            smbios_data.smbios_dictionary[self.model]["CPU Generation"] <= cpu_data.CPUGen.penryn.value or \
             self.model in ["MacPro4,1", "MacPro5,1"]
         ):
             logging.info("- Adding UHCI/OHCI USB support")

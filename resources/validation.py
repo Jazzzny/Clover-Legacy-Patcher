@@ -4,7 +4,7 @@ from pathlib import Path
 
 from resources.sys_patch import sys_patch_helpers
 from resources.build import build
-from resources import constants
+from resources import constants, network_handler
 from data import example_data, model_array, sys_patch_dict, os_data
 
 
@@ -120,7 +120,7 @@ class PatcherValidation:
                                     logging.info(f"File not found: {source_file}")
                                     raise Exception(f"Failed to find {source_file}")
 
-        logging.info(f"- Validating against Darwin {major_kernel}.{minor_kernel}")
+        logging.info(f"Validating against Darwin {major_kernel}.{minor_kernel}")
         if not sys_patch_helpers.SysPatchHelpers(self.constants).generate_patchset_plist(patchset, f"OpenCore-Legacy-Patcher-{major_kernel}.{minor_kernel}.plist", None):
             raise Exception("Failed to generate patchset plist")
 
@@ -134,8 +134,11 @@ class PatcherValidation:
         """
 
         if not Path(self.constants.payload_local_binaries_root_path_dmg).exists():
-            logging.info("- Skipping Root Patch File integrity validation")
-            return
+            dl_obj = network_handler.DownloadObject(f"https://github.com/dortania/PatcherSupportPkg/releases/download/{self.constants.patcher_support_pkg_version}/Universal-Binaries.dmg", self.constants.payload_local_binaries_root_path_dmg)
+            dl_obj.download(spawn_thread=False)
+            if dl_obj.download_complete is False:
+                logging.info("Failed to download Universal-Binaries.dmg")
+                raise Exception("Failed to download Universal-Binaries.dmg")
 
         logging.info("Validating Root Patch File integrity")
         output = subprocess.run(
@@ -150,13 +153,13 @@ class PatcherValidation:
         )
 
         if output.returncode != 0:
-            logging.info("- Failed to mount Universal-Binaries.dmg")
+            logging.info("Failed to mount Universal-Binaries.dmg")
             logging.info(f"Output: {output.stdout.decode()}")
             logging.info(f"Return Code: {output.returncode}")
 
             raise Exception("Failed to mount Universal-Binaries.dmg")
 
-        logging.info("- Mounted Universal-Binaries.dmg")
+        logging.info("Mounted Universal-Binaries.dmg")
 
 
         for supported_os in [os_data.os_data.big_sur, os_data.os_data.monterey, os_data.os_data.ventura]:
@@ -176,7 +179,7 @@ class PatcherValidation:
         )
 
         if output.returncode != 0:
-            logging.info("- Failed to unmount Universal-Binaries.dmg")
+            logging.info("Failed to unmount Universal-Binaries.dmg")
             logging.info(f"Output: {output.stdout.decode()}")
             logging.info(f"Return Code: {output.returncode}")
 

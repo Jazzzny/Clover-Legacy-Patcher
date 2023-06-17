@@ -17,6 +17,7 @@ SFR_SOFTWARE_UPDATE_PATH: str = "SFR/com_apple_MobileAsset_SFRSoftwareUpdate/com
 CATALOG_URL_BASE:         str = "https://swscan.apple.com/content/catalogs/others/index"
 CATALOG_URL_EXTENSION:    str = ".merged-1.sucatalog"
 CATALOG_URL_VARIANTS:     list = [
+    "14",
     "13",
     "12",
     "10.16",
@@ -53,7 +54,7 @@ class InstallerCreation():
             bool: True if successful, False otherwise
         """
 
-        logging.info("- Extracting macOS installer from InstallAssistant.pkg\n  This may take some time")
+        logging.info("Extracting macOS installer from InstallAssistant.pkg")
         try:
             applescript.AppleScript(
                 f'''do shell script "installer -pkg {Path(download_path)}/InstallAssistant.pkg -target /"'''
@@ -62,11 +63,11 @@ class InstallerCreation():
                 " without altering line endings",
             ).run()
         except Exception as e:
-            logging.info("- Failed to install InstallAssistant")
+            logging.info("Failed to install InstallAssistant")
             logging.info(f"  Error Code: {e}")
             return False
 
-        logging.info("- InstallAssistant installed")
+        logging.info("InstallAssistant installed")
         return True
 
 
@@ -201,7 +202,6 @@ fi
             if not any(all_disks[disk]['removable'] is False for partition in all_disks[disk]):
                 continue
 
-            logging.info(f"disk {disk}: {all_disks[disk]['name']} ({utilities.human_fmt(all_disks[disk]['size'])})")
             list_disks.update({
                 disk: {
                     "identifier": all_disks[disk]["identifier"],
@@ -398,7 +398,8 @@ class RemoteInstallerCatalog:
                         "integrity": integrity,
                         "Source":   "Apple Inc.",
                         "Variant":   catalog_url,
-                        "OS":        os_data.os_conversion.os_to_kernel(version)
+                        "OS":        os_data.os_conversion.os_to_kernel(version),
+                        "Models":    build_plist["MobileAssetProperties"]["SupportedDeviceModels"],
                     }
                 })
 
@@ -480,7 +481,6 @@ class RemoteInstallerCatalog:
 
                     os_builds.append(newest_apps[ia]["Build"])
 
-        # Final passthrough
         # Remove Betas if there's a non-beta version available
         for ia in list(newest_apps):
             if newest_apps[ia]["Variant"] in ["CustomerSeed", "DeveloperSeed", "PublicSeed"]:
@@ -488,6 +488,11 @@ class RemoteInstallerCatalog:
                     if newest_apps[ia2]["Version"].split(".")[0] == newest_apps[ia]["Version"].split(".")[0] and newest_apps[ia2]["Variant"] not in ["CustomerSeed", "DeveloperSeed", "PublicSeed"]:
                         newest_apps.pop(ia)
                         break
+
+        # Remove unsupported versions (namely 14)
+        for ia in list(newest_apps):
+            if newest_apps[ia]["Version"].split(".")[0] not in supported_versions:
+                newest_apps.pop(ia)
 
         return newest_apps
 

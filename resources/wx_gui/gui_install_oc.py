@@ -3,8 +3,9 @@ import threading
 import logging
 import traceback
 
-from resources.wx_gui import gui_main_menu, gui_support, gui_sys_patch
+from resources.wx_gui import gui_main_menu, gui_support, gui_sys_patch_display
 from resources import constants, install
+from data import os_data
 
 
 class InstallOCFrame(wx.Frame):
@@ -12,6 +13,7 @@ class InstallOCFrame(wx.Frame):
     Create a frame for installing OpenCore to disk
     """
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
+        logging.info("Initializing Install OpenCore Frame")
         super(InstallOCFrame, self).__init__(parent, title=title, size=(300, 120), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         gui_support.GenerateMenubar(self, global_constants).generate()
 
@@ -123,13 +125,14 @@ class InstallOCFrame(wx.Frame):
                 # disk6s1 -> disk6
                 disk_root = self.constants.booted_oc_disk.strip("disk")
                 disk_root = "disk" + disk_root.split("s")[0]
-                logging.info(f"- Checking if booted disk is present: {disk_root}")
+                logging.info(f"Checking if booted disk is present: {disk_root}")
 
             # Add buttons for each disk
             items = len(self.available_disks)
             longest_label = max((len(self.available_disks[disk]['disk']) + len(self.available_disks[disk]['name']) + len(str(self.available_disks[disk]['size']))) for disk in self.available_disks)
             longest_label = longest_label * 9
             spacer = 0
+            logging.info("Available disks:")
             for disk in self.available_disks:
                 # Create a button for each disk
                 logging.info(f"- {self.available_disks[disk]['disk']} - {self.available_disks[disk]['name']} - {self.available_disks[disk]['size']}")
@@ -194,13 +197,16 @@ class InstallOCFrame(wx.Frame):
         items = len(partitions)
         longest_label = max((len(partitions[partition]['partition']) + len(partitions[partition]['name']) + len(str(partitions[partition]['size']))) for partition in partitions)
         longest_label = longest_label * 10
+        spacer = 0
+        logging.info(f"Available partitions for {disk}:")
         for partition in partitions:
             logging.info(f"- {partitions[partition]['partition']} - {partitions[partition]['name']} - {partitions[partition]['size']}")
-            disk_button = wx.Button(dialog, label=f"{partitions[partition]['partition']} - {partitions[partition]['name']} - {partitions[partition]['size']}", size=(longest_label,30), pos=(-1, text_label.GetPosition()[1] + text_label.GetSize()[1] + 5))
+            disk_button = wx.Button(dialog, label=f"{partitions[partition]['partition']} - {partitions[partition]['name']} - {partitions[partition]['size']}", size=(longest_label,30), pos=(-1, text_label.GetPosition()[1] + text_label.GetSize()[1] + 5 + spacer))
             disk_button.Centre(wx.HORIZONTAL)
             disk_button.Bind(wx.EVT_BUTTON, lambda event, partition=partition: self._install_oc_process(partition))
             if items == 1 or self.constants.booted_oc_disk == partitions[partition]['partition']:
                 disk_button.SetDefault()
+            spacer += 25
 
         # Add button: Return to main menu
         return_button = wx.Button(dialog, label="Return to main menu", size=(150,30), pos=(-1, disk_button.GetPosition()[1] + disk_button.GetSize()[1]))
@@ -268,7 +274,7 @@ class InstallOCFrame(wx.Frame):
             wx.Yield()
 
         if self.result is True:
-            if self.constants.update_stage != gui_support.AutoUpdateStages.INACTIVE:
+            if self.constants.update_stage != gui_support.AutoUpdateStages.INACTIVE and self.constants.detected_os >= os_data.os_data.big_sur:
                 self.constants.update_stage = gui_support.AutoUpdateStages.ROOT_PATCHING
                 popup_message = wx.MessageDialog(
                     self,
@@ -277,7 +283,8 @@ class InstallOCFrame(wx.Frame):
                 )
                 popup_message.ShowModal()
                 if popup_message.GetReturnCode() == wx.ID_YES:
-                    gui_sys_patch.SysPatchFrame(
+                    self.Hide()
+                    gui_sys_patch_display.SysPatchDisplayFrame(
                         parent=None,
                         title=self.title,
                         global_constants=self.constants,
@@ -304,14 +311,14 @@ class InstallOCFrame(wx.Frame):
         """
         Install OpenCore to disk
         """
-        logging.info(f"- Installing OpenCore to {partition}")
+        logging.info(f"Installing OpenCore to {partition}")
 
         logger = logging.getLogger()
         logger.addHandler(gui_support.ThreadHandler(self.text_box))
         try:
             self.result = install.tui_disk_installation(self.constants).install_opencore(partition)
         except:
-            logging.error("- An internal error occurred while installing:\n")
+            logging.error("An internal error occurred while installing:\n")
             logging.error(traceback.format_exc())
         logger.removeHandler(logger.handlers[2])
 

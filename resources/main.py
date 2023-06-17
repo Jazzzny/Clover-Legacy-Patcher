@@ -1,5 +1,6 @@
 # Copyright (C) 2020-2022, Dhinak G, Mykola Grymalyuk
 
+import os
 import sys
 import time
 import logging
@@ -27,13 +28,9 @@ class OpenCoreLegacyPatcher:
     """
 
     def __init__(self) -> None:
-        logging_handler.InitializeLoggingSupport()
-
         self.constants: constants.Constants = constants.Constants()
 
-        self.constants.wxpython_variant: bool = True
-
-        logging.info(f"- Loading OpenCore Legacy Patcher v{self.constants.patcher_version}...")
+        logging_handler.InitializeLoggingSupport(self.constants)
 
         self._generate_base_data()
 
@@ -45,6 +42,11 @@ class OpenCoreLegacyPatcher:
         """
         Generate base data required for the patcher to run
         """
+
+        self.constants.wxpython_variant: bool = True
+
+        # Ensure we live after parent process dies (ie. LaunchAgent)
+        os.setpgrp()
 
         # Generate OS data
         os_data = os_probe.OSProbe()
@@ -90,22 +92,18 @@ class OpenCoreLegacyPatcher:
 
         # Generate defaults
         defaults.GenerateDefaults(self.computer.real_model, True, self.constants)
-        threading.Thread(target=analytics_handler.Analytics, args=(self.constants,)).start()
+        threading.Thread(target=analytics_handler.Analytics(self.constants).send_analytics).start()
 
         if utilities.check_cli_args() is None:
-            logging.info(f"- No arguments present, loading {'GUI' if self.constants.wxpython_variant is True else 'TUI'} mode")
+            self.constants.cli_mode = False
             return
 
-        logging.info("- Detected arguments, switching to CLI mode")
+        logging.info("Detected arguments, switching to CLI mode")
         self.constants.gui_mode = True  # Assumes no user interaction is required
 
         ignore_args = ["--auto_patch", "--gui_patch", "--gui_unpatch", "--update_installed"]
         if not any(x in sys.argv for x in ignore_args):
             self.constants.current_path = Path.cwd()
-            self.constants.cli_mode = True
-            if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-                logging.info("- Rerouting payloads location")
-                self.constants.payload_path = sys._MEIPASS / Path("payloads")
         ignore_args = ignore_args.pop(0)
 
         if not any(x in sys.argv for x in ignore_args):

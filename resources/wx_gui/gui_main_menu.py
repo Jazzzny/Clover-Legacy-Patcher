@@ -4,14 +4,17 @@ import sys
 import logging
 import threading
 import webbrowser
+import subprocess
+
+from pathlib import Path
 
 from resources.wx_gui import (
     gui_build,
     gui_macos_installer_download,
-    gui_sys_patch,
     gui_support,
     gui_help,
     gui_settings,
+    gui_sys_patch_display,
     gui_update,
 )
 from resources import (
@@ -24,6 +27,7 @@ from data import os_data
 
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
+        logging.info("Initializing Main Menu Frame")
         super(MainFrame, self).__init__(parent, title=title, size=(600, 400), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         gui_support.GenerateMenubar(self, global_constants).generate()
 
@@ -39,6 +43,7 @@ class MainFrame(wx.Frame):
 
         self.Centre()
         self.Show()
+
 
         self._preflight_checks()
 
@@ -201,6 +206,8 @@ class MainFrame(wx.Frame):
             self.on_build_and_install()
             return
 
+        self._fix_local_install()
+
         if "--update_installed" in sys.argv and self.constants.has_checked_updates is False and gui_support.CheckProperties(self.constants).host_can_build():
             # Notify user that the update has been installed
             self.constants.has_checked_updates = True
@@ -213,11 +220,11 @@ class MainFrame(wx.Frame):
             pop_up.ShowModal()
 
             if pop_up.GetReturnCode() != wx.ID_YES:
-                print("- Skipping OpenCore and root volume patch update...")
+                logging.info("Skipping OpenCore and root volume patch update...")
                 return
 
 
-            print("- Updating OpenCore and root volume patches...")
+            logging.info("Updating OpenCore and root volume patches...")
             self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
             self.Hide()
             pos = self.GetPosition()
@@ -230,6 +237,34 @@ class MainFrame(wx.Frame):
             self.Close()
 
         threading.Thread(target=self._check_for_updates).start()
+
+
+    def _fix_local_install(self) -> None:
+        """
+        Work-around users manually copying the app to /Applications
+        We'll delete the app, and create a proper symlink
+        Note: This *shouldn't* be needed with installs after 0.6.7, but it's a good catch-all
+        """
+
+        if "--update_installed" not in sys.argv:
+            return
+        if self.constants.has_checked_updates is True:
+            return
+
+        # Check if app exists in /Applications, and is not a symlink
+        if Path("/Applications/OpenCore-Patcher.app").exists() and Path("/Applications/OpenCore-Patcher.app").is_symlink() is False:
+            logging.info("Found user-installed app in /Applications, replacing with symlink")
+            # Delete app
+            result = subprocess.run(["rm", "-rf", "/Applications/OpenCore-Patcher.app"], capture_output=True)
+            if result.returncode != 0:
+                logging.info("Failed to delete app from /Applications")
+                return
+
+            # Create symlink
+            result = subprocess.run(["ln", "-s", "/Library/Application Support/Dortania/OpenCore-Patcher.app", "/Applications/OpenCore-Patcher.app"], capture_output=True)
+            if result.returncode != 0:
+                logging.info("Failed to create symlink to /Applications")
+                return
 
 
     def _check_for_updates(self):
@@ -277,7 +312,7 @@ class MainFrame(wx.Frame):
 
 
     def on_post_install_root_patch(self, event: wx.Event = None):
-        gui_sys_patch.SysPatchFrame(
+        gui_sys_patch_display.SysPatchDisplayFrame(
             parent=self,
             title=self.title,
             global_constants=self.constants,

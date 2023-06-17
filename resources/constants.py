@@ -12,8 +12,8 @@ from data import os_data
 class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
-        self.patcher_version:                 str = "0.6.6"  # OpenCore-Legacy-Patcher
-        self.patcher_support_pkg_version:     str = "1.0.1"  # PatcherSupportPkg
+        self.patcher_version:                 str = "0.6.8"  # OpenCore-Legacy-Patcher
+        self.patcher_support_pkg_version:     str = "1.1.3"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2023 Dortania"
         self.patcher_name:                    str = "OpenCore Legacy Patcher"
 
@@ -117,7 +117,7 @@ class Constants:
         ## Internal settings
         self.allow_oc_everywhere:       bool = False  # Set whether Patcher can be run on unsupported Macs
         self.gui_mode:                  bool = False  # Determine whether running in a GUI or TUI
-        self.cli_mode:                  bool = False  # Determine if running in CLI mode
+        self.cli_mode:                  bool = True  #  Determine if running in CLI mode
         self.validate:                  bool = False  # Enable validation testing for CI
         self.recovery_status:           bool = False  # Detect if booted into RecoveryOS
         self.ignore_updates:            bool = False  # Ignore OCLP updates
@@ -134,6 +134,7 @@ class Constants:
         self.booted_oc_disk:             str = None  #  Determine current disk OCLP booted from
         self.unpack_thread                   = None  #  Determine if unpack thread finished (threading.Thread)
         self.update_stage:               int = 0  #     Determine update stage (see gui_support.py)
+        self.log_filepath:              Path = None  #  Path to log file
 
         self.commit_info: tuple = (None, None, None)  # Commit info (Branch, Commit Date, Commit URL)
 

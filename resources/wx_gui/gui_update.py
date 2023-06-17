@@ -22,6 +22,7 @@ class UpdateFrame(wx.Frame):
     Create a frame for updating the patcher
     """
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: wx.Point, url: str = "", version_label: str = "") -> None:
+        logging.info("Initializing Update Frame")
         if parent:
             self.parent: wx.Frame = parent
 
@@ -51,9 +52,15 @@ class UpdateFrame(wx.Frame):
                     version_label = dict[key]["Version"]
                     url = dict[key]["Link"]
                     break
+            else:
+                wx.MessageBox("Failed to get update info", "Critical Error")
+                sys.exit(1)
 
         self.version_label = version_label
         self.url = url
+
+        logging.info(f"Update URL: {url}")
+        logging.info(f"Update Version: {version_label}")
 
         self.frame: wx.Frame = wx.Frame(
             parent=parent if parent else self,
@@ -71,14 +78,26 @@ class UpdateFrame(wx.Frame):
         # Progress bar
         progress_bar = wx.Gauge(self.frame, range=100, pos=(10, 50), size=(300, 20))
         progress_bar.Centre(wx.HORIZONTAL)
-        progress_bar.Pulse()
+
+        progress_bar_animation = gui_support.GaugePulseCallback(self.constants, progress_bar)
+        progress_bar_animation.start_pulse()
+
         self.progress_bar = progress_bar
+        self.progress_bar_animation = progress_bar_animation
 
         self.frame.Centre()
         self.frame.Show()
         wx.Yield()
 
-        download_obj = network_handler.DownloadObject(url, self.constants.payload_path / "OpenCore-Patcher-GUI.app.zip")
+        download_obj = None
+        def _fetch_update() -> None:
+            nonlocal download_obj
+            download_obj = network_handler.DownloadObject(url, self.constants.payload_path / "OpenCore-Patcher-GUI.app.zip")
+
+        thread = threading.Thread(target=_fetch_update)
+        thread.start()
+        while thread.is_alive():
+            wx.Yield()
 
         gui_download.DownloadFrame(
             self.frame,
@@ -89,6 +108,7 @@ class UpdateFrame(wx.Frame):
         )
 
         if download_obj.download_complete is False:
+            progress_bar_animation.stop_pulse()
             progress_bar.SetValue(0)
             wx.MessageBox("Failed to download update. If you continue to have this issue, please manually download OpenCore Legacy Patcher off Github", "Critical Error!", wx.OK | wx.ICON_ERROR)
             sys.exit(1)
@@ -120,6 +140,7 @@ class UpdateFrame(wx.Frame):
 
         # Progress bar
         progress_bar.Hide()
+        progress_bar_animation.stop_pulse()
 
         # Label: 0.6.6 has been installed to:
         installed_label = wx.StaticText(self.frame, label=f"{version_label} has been installed:", pos=(-1, progress_bar.GetPosition().y - 15))
@@ -174,6 +195,8 @@ class UpdateFrame(wx.Frame):
                 ["ditto", "-xk", str(self.constants.payload_path / "OpenCore-Patcher-GUI.app.zip"), str(self.constants.payload_path)], capture_output=True
             )
             if result.returncode != 0:
+                logging.error(f"Failed to extract update. Error: {result.stderr.decode('utf-8')}")
+                wx.CallAfter(self.progress_bar_animation.stop_pulse)
                 wx.CallAfter(self.progress_bar.SetValue, 0)
                 wx.CallAfter(wx.MessageBox, f"Failed to extract update. Error: {result.stderr.decode('utf-8')}", "Critical Error!", wx.OK | wx.ICON_ERROR)
                 wx.CallAfter(sys.exit, 1)
@@ -183,6 +206,8 @@ class UpdateFrame(wx.Frame):
                 break
 
             if i == 1:
+                logging.error("Failed to extract update. Error: Update file does not exist")
+                wx.CallAfter(self.progress_bar_animation.stop_pulse)
                 wx.CallAfter(self.progress_bar.SetValue, 0)
                 wx.CallAfter(wx.MessageBox, "Failed to extract update. Error: Update file does not exist", "Critical Error!", wx.OK | wx.ICON_ERROR)
                 wx.CallAfter(sys.exit, 1)
@@ -202,18 +227,20 @@ if [ ! -d "/Library/Application Support/Dortania" ]; then
     mkdir -p "/Library/Application Support/Dortania"
 fi
 
-# Check if '/Library/Application Support/Dortania/OpenCore-Patcher.app' exists
+# Check if 'OpenCore-Patcher.app' exists
 if [ -d "/Library/Application Support/Dortania/OpenCore-Patcher.app" ]; then
     rm -rf "/Library/Application Support/Dortania/OpenCore-Patcher.app"
+fi
+
+if [ -d "/Applications/OpenCore-Patcher.app" ]; then
+    rm -rf "/Applications/OpenCore-Patcher.app"
 fi
 
 # Move '/tmp/OpenCore-Patcher.app' to '/Library/Application Support/Dortania'
 mv "{str(self.application_path)}" "/Library/Application Support/Dortania/OpenCore-Patcher.app"
 
 # Check if '/Applications/OpenCore-Patcher.app' exists
-if [ ! -d "/Applications/OpenCore-Patcher.app" ]; then
-    ln -s "/Library/Application Support/Dortania/OpenCore-Patcher.app" "/Applications/OpenCore-Patcher.app"
-fi
+ln -s "/Library/Application Support/Dortania/OpenCore-Patcher.app" "/Applications/OpenCore-Patcher.app"
 
 # Create update.plist with info about update
 cat << EOF > "/Library/Application Support/Dortania/update.plist"
@@ -240,10 +267,13 @@ EOF
         args = [self.constants.oclp_helper_path, "/bin/sh", str(self.constants.payload_path / "update.sh")]
         result = subprocess.run(args, capture_output=True)
         if result.returncode != 0:
+            wx.CallAfter(self.progress_bar_animation.stop_pulse)
             wx.CallAfter(self.progress_bar.SetValue, 0)
             if "User cancelled" in result.stderr.decode("utf-8"):
+                logging.info("User cancelled update")
                 wx.CallAfter(wx.MessageBox, "User cancelled update", "Update Cancelled", wx.OK | wx.ICON_INFORMATION)
             else:
+                logging.critical(f"Failed to install update. Error: {result.stderr.decode('utf-8')}")
                 wx.CallAfter(wx.MessageBox, f"Failed to install update. Error: {result.stderr.decode('utf-8')}", "Critical Error!", wx.OK | wx.ICON_ERROR)
             wx.CallAfter(sys.exit, 1)
 

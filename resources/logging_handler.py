@@ -1,9 +1,16 @@
-import logging
-import sys
-import threading
 import os
+import sys
+import pprint
+import logging
+import threading
+import traceback
 import subprocess
+import applescript
+
 from pathlib import Path
+from datetime import datetime
+
+from resources import constants, analytics_handler, global_settings
 
 
 class InitializeLoggingSupport:
@@ -26,25 +33,26 @@ class InitializeLoggingSupport:
 
     """
 
-    def __init__(self) -> None:
-        self.log_filename: str  = "OpenCore-Patcher.log"
+    def __init__(self, global_constants: constants.Constants) -> None:
+        self.constants: constants.Constants = global_constants
+
+        log_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+
+        self.log_filename: str  = f"OpenCore-Patcher_{self.constants.patcher_version}_{log_time}.log"
         self.log_filepath: Path = None
 
         self.original_excepthook:        sys       = sys.excepthook
         self.original_thread_excepthook: threading = threading.excepthook
 
-        self.max_file_size:     int = 1024 * 1024 * 10  # 10 MB
-        self.file_size_redline: int = 1024 * 1024 * 9   # 9 MB, when to start cleaning log file
+        self.max_file_size:     int = 1024 * 1024               # 1 MB
+        self.file_size_redline: int = 1024 * 1024 - 1024 * 100  # 900 KB, when to start cleaning log file
 
         self._initialize_logging_path()
-        self._clean_log_file()
         self._attempt_initialize_logging_configuration()
+        self._start_logging()
         self._implement_custom_traceback_handler()
         self._fix_file_permission()
-
-
-    def __del__(self) -> None:
-        self._restore_original_excepthook()
+        self._clean_prior_version_logs()
 
 
     def _initialize_logging_path(self) -> None:
@@ -52,39 +60,57 @@ class InitializeLoggingSupport:
         Initialize logging framework storage path
         """
 
-        self.log_filepath = Path(f"~/Library/Logs/{self.log_filename}").expanduser()
+        base_path = Path("~/Library/Logs").expanduser()
+        if not base_path.exists():
+            # Likely in an installer environment, store in /Users/Shared
+            base_path = Path("/Users/Shared")
+        else:
+            # create Dortania folder if it doesn't exist
+            base_path = base_path / "Dortania"
+            if not base_path.exists():
+                try:
+                    base_path.mkdir()
+                except Exception as e:
+                    logging.error(f"Failed to create Dortania folder: {e}")
+                    base_path = Path("/Users/Shared")
 
-        if not self.log_filepath.parent.exists():
-             # Likely in an installer environment, store in /Users/Shared
-            self.log_filepath = Path("/Users/Shared") / self.log_filename
+        self.log_filepath = Path(f"{base_path}/{self.log_filename}").expanduser()
+        self.constants.log_filepath = self.log_filepath
 
-        print("- Initializing logging framework...")
-        print(f"  - Log file: {self.log_filepath}")
-
-
-    def _clean_log_file(self) -> None:
+    def _clean_prior_version_logs(self) -> None:
         """
-        Determine if log file should be cleaned
+        Clean logs from old Patcher versions
 
-        We check if we're near the max file size, and if so, we clean the log file
+        Keep 10 latest logs
         """
 
-        if not self.log_filepath.exists():
-            return
+        paths = [
+            self.log_filepath.parent,        # ~/Library/Logs/Dortania
+            self.log_filepath.parent.parent, # ~/Library/Logs (old location)
+        ]
 
-        if self.log_filepath.stat().st_size < self.file_size_redline:
-            return
+        logs = []
 
-        # Check if backup log file exists
-        backup_log_filepath = self.log_filepath.with_suffix(".old.log")
-        try:
-            if backup_log_filepath.exists():
-                backup_log_filepath.unlink()
+        for path in paths:
+            for file in path.glob("OpenCore-Patcher*"):
+                if not file.is_file():
+                    continue
 
-            # Rename current log file to backup log file
-            self.log_filepath.rename(backup_log_filepath)
-        except Exception as e:
-            print(f"- Failed to clean log file: {e}")
+                if not file.name.endswith(".log"):
+                    continue
+
+                if file.name == self.log_filename:
+                    continue
+
+                logs.append(file)
+
+        logs.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+
+        for log in logs[9:]:
+            try:
+                log.unlink()
+            except Exception as e:
+                logging.error(f"Failed to delete log file: {e}")
 
 
     def _fix_file_permission(self) -> None:
@@ -98,11 +124,21 @@ class InitializeLoggingSupport:
         if os.geteuid() != 0:
             return
 
-        result = subprocess.run(["chmod", "777", self.log_filepath], capture_output=True)
-        if result.returncode != 0:
-            print(f"- Failed to fix log file permissions")
-            if result.stderr:
-                print(result.stderr.decode("utf-8"))
+        paths = [
+            self.log_filepath,        # ~/Library/Logs/Dortania/OpenCore-Patcher_{version}_{date}.log
+            self.log_filepath.parent, # ~/Library/Logs/Dortania
+        ]
+
+        for path in paths:
+            result = subprocess.run(["chmod", "777", path], capture_output=True)
+            if result.returncode != 0:
+                logging.error(f"Failed to fix log file permissions")
+                if result.stdout:
+                    logging.error("STDOUT:")
+                    logging.error(result.stdout.decode("utf-8"))
+                if result.stderr:
+                    logging.error("STDERR:")
+                    logging.error(result.stderr.decode("utf-8"))
 
 
     def _initialize_logging_configuration(self, log_to_file: bool = True) -> None:
@@ -119,7 +155,7 @@ class InitializeLoggingSupport:
 
         logging.basicConfig(
             level=logging.NOTSET,
-            format="%(asctime)s - %(filename)s (%(lineno)d): %(message)s",
+            format="[%(asctime)s] [%(filename)-32s] [%(lineno)-4d]: %(message)s",
             handlers=[
                 logging.StreamHandler(stream = sys.stdout),
                 logging.FileHandler(self.log_filepath) if log_to_file is True else logging.NullHandler()
@@ -140,9 +176,30 @@ class InitializeLoggingSupport:
         try:
             self._initialize_logging_configuration()
         except Exception as e:
-            print(f"- Failed to initialize logging framework: {e}")
-            print("- Retrying without logging to file...")
+            print(f"Failed to initialize logging framework: {e}")
+            print("Retrying without logging to file...")
             self._initialize_logging_configuration(log_to_file=False)
+
+
+    def _start_logging(self):
+        """
+        Start logging, used as easily identifiable start point in logs
+        """
+
+        str_msg = f"# OpenCore Legacy Patcher ({self.constants.patcher_version}) #"
+        str_len = len(str_msg)
+
+        logging.info('#' * str_len)
+        logging.info(str_msg)
+        logging.info('#' * str_len)
+
+        logging.info("Log file set:")
+        # Display relative path to avoid disclosing user's username
+        try:
+            path = self.log_filepath.relative_to(Path.home())
+            logging.info(f"~/{path}")
+        except ValueError:
+            logging.info(self.log_filepath)
 
 
     def _implement_custom_traceback_handler(self) -> None:
@@ -155,6 +212,49 @@ class InitializeLoggingSupport:
             Reroute traceback in main thread to logging module
             """
             logging.error("Uncaught exception in main thread", exc_info=(type, value, tb))
+            self._display_debug_properties()
+
+            if "wx/" in "".join(traceback.format_exception(type, value, tb)):
+                # Likely a GUI error, don't display error dialog
+                return
+
+            if self.constants.cli_mode is True:
+                threading.Thread(target=analytics_handler.Analytics(self.constants).send_crash_report, args=(self.log_filepath,)).start()
+                return
+
+            error_msg = f"OpenCore Legacy Patcher encountered the following internal error:\n\n"
+            error_msg += f"{type.__name__}: {value}"
+            if tb:
+                error_msg += f"\n\n{traceback.extract_tb(tb)[-1]}"
+
+            cant_log: bool = global_settings.GlobalEnviromentSettings().read_property("DisableCrashAndAnalyticsReporting")
+            if not isinstance(cant_log, bool):
+                cant_log = False
+
+            if self.constants.commit_info[0].startswith("refs/tags"):
+                cant_log = True
+
+            if cant_log is True:
+                error_msg += "\n\nReveal log file?"
+            else:
+                error_msg += "\n\nSend crash report to Dortania?"
+
+            # Ask user if they want to send crash report
+            try:
+                result = applescript.AppleScript(f'display dialog "{error_msg}" with title "OpenCore Legacy Patcher ({self.constants.patcher_version})" buttons {{"Yes", "No"}} default button "Yes" with icon caution').run()
+            except Exception as e:
+                logging.error(f"Failed to display crash report dialog: {e}")
+                return
+
+            if result[applescript.AEType(b'bhit')] != "Yes":
+                return
+
+            if cant_log is True:
+                subprocess.run(["open", "--reveal", self.log_filepath])
+                return
+
+            threading.Thread(target=analytics_handler.Analytics(self.constants).send_crash_report, args=(self.log_filepath,)).start()
+
 
         def custom_thread_excepthook(args) -> None:
             """
@@ -173,3 +273,23 @@ class InitializeLoggingSupport:
 
         sys.excepthook = self.original_excepthook
         threading.excepthook = self.original_thread_excepthook
+
+
+    def _display_debug_properties(self) -> None:
+        """
+        Display debug properties, primarily after main thread crash
+        """
+        logging.info("Host Properties:")
+        logging.info(f"  XNU Version: {self.constants.detected_os}.{self.constants.detected_os_minor}")
+        logging.info(f"  XNU Build: {self.constants.detected_os_build}")
+        logging.info(f"  macOS Version: {self.constants.detected_os_version}")
+        logging.info("Debug Properties:")
+        logging.info(f"  Effective User ID: {os.geteuid()}")
+        logging.info(f"  Effective Group ID: {os.getegid()}")
+        logging.info(f"  Real User ID: {os.getuid()}")
+        logging.info(f"  Real Group ID: {os.getgid()}")
+        logging.info("  Arguments passed to Patcher:")
+        for arg in sys.argv:
+            logging.info(f"    {arg}")
+
+        logging.info(f"Host Properties:\n{pprint.pformat(self.constants.computer.__dict__, indent=4)}")

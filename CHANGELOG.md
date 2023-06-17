@@ -1,5 +1,54 @@
 # OpenCore Legacy Patcher changelog
 
+## 0.6.8
+- Update non-Metal Binaries:
+  - Improve experimental Menubar implementation stability
+  - Implement reduce transparency Menubar
+- Resolve app not updating in `/Applications` after an update
+  - Work-around users manually copying app to `/Applications` instead of allowing Root Volume Patcher to create a proper alias
+- Increment Binaries:
+  - PatcherSupportPkg 1.1.3 - release
+
+## 0.6.7
+- Resolve partition buttons overlapping in Install OpenCore UI
+  - ex. "EFI" and additional FAT32 partitions on a single drive
+- Re-enable mediaanalysisd on Ventura
+  - Allows for Live Text support on systems with3802 GPUs
+    - ie. Intel Ivy Bridge and Haswell, Nvidia Kepler
+  - Previously disabled due to high instability in Photos with Face Scanning, now resolved
+- Work-around crashing after patching with MenuBar2 implementation enabled
+  - Setting must be re-enabled after patching
+- Update non-Metal Binaries:
+  - Resolve window placement defaulting past top of screen for some apps
+    - ex. OpenCore-Patcher.app during root patching
+  - Resolve indeterminate progress bars not rendering with wxWidgets in Monterey and later
+    - ex. OpenCore-Patcher.app
+- UI changes:
+  - Add "Show Log File" button to menubar
+- Avoid listing unsupported installer to download by default
+  - ex. macOS 14 InstallAssistant.pkg
+- Resolve crash when fetching remote macOS installers offline
+- Avoid displaying root patches on unsupported macOS versions
+  - ex. macOS 14
+- Backend changes:
+  - Call `setpgrp()` to prevent app from being killed if parent process is killed (ie. LaunchAgents)
+  - Rework logging handler:
+    - Implement formatted logging
+      - Allowing easier debugging
+    - Implement per-version, per-run file logging
+      - ex. OpenCore-Patcher (0.6.7) (2021-12-31-12-34-56-666903).log
+    - Keep only 10 latest log files
+    - Reveal log file in Finder on main thread crash
+    - Avoid writing username to log file
+  - Resolve SharedSupport.dmg pathing error during macOS Installer Verification
+    - Applicable to systems with 2 (or more) USB Installers with the same name plugged in
+  - Resolve payloads path being mis-routed during CLI calls
+  - Add UI when fetching root patches for host
+  - Remove progress bar work-around for non-Metal in Monterey and later
+    - Requires host to have been patched with PatcherSupportPkg 1.1.2 or newer
+- Increment Binaries:
+  - PatcherSupportPkg 1.1.2 - release
+
 ## 0.6.6
 - Implement option to disable ColorSync downgrade on HD 3000 Macs
   - Allows for Display Profiles support on some units
@@ -20,6 +69,11 @@
   - Patch currently limited to Ventura and newer
 - Restore Function Keys on MacBook5,2 and MacBook4,1
   - Implementation by [@jazzzny](https://github.com/Jazzzny)
+- Update non-Metal Binaries:
+  - Resolves cryptexd and sshd crashes
+  - Resolves screen recording regression
+  - Resolves Photo Booth on macOS Monterey and later
+    - May require tccplus for permissions
 - Resolve Application alias not being created with AutoPatcher
 - Backend changes:
   - Rename OCLP-Helper to OpenCore-Patcher
@@ -41,8 +95,10 @@
   - Utilize `py-applescript` for authorization prompts
     - Avoids displaying prompts with `osascript` in the title
     - Due to limitations, only used for installer creation and OpenCore installation
+  - Resolve exception handler not logging to file
+  - Display raised exceptions from main thread to users
 - Increment Binaries:
-  - PatcherSupportPkg 1.0.1 - release
+  - PatcherSupportPkg 1.1.0 - release
   - OpenCorePkg 0.9.2 - release
   - Lilu 1.6.6 - rolling (d8f3782)
   - RestrictEvents 1.1.1 - release

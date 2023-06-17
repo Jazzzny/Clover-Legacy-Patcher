@@ -92,7 +92,7 @@ class DetectRootPatch:
         non_metal_os = os_data.os_data.catalina
         for i, gpu in enumerate(gpus):
             if gpu.class_code and gpu.class_code != 0xFFFFFFFF:
-                logging.info(f"- Found GPU ({i}): {utilities.friendly_hex(gpu.vendor_id)}:{utilities.friendly_hex(gpu.device_id)}")
+                logging.info(f"Found GPU ({i}): {utilities.friendly_hex(gpu.vendor_id)}:{utilities.friendly_hex(gpu.device_id)}")
                 if gpu.arch in [device_probe.NVIDIA.Archs.Tesla] and self.constants.force_nv_web is False:
                     if self.constants.detected_os > non_metal_os:
                         self.nvidia_tesla = True
@@ -494,7 +494,7 @@ class DetectRootPatch:
         # This is due to Apple implementing an internal USB hub on post-Penryn (excluding MacPro4,1 and MacPro5,1)
         # Ref: https://techcommunity.microsoft.com/t5/microsoft-usb-blog/reasons-to-avoid-companion-controllers/ba-p/270710
         if (
-            smbios_data.smbios_dictionary[self.model]["CPU Generation"] <= cpu_data.cpu_data.penryn.value or \
+            smbios_data.smbios_dictionary[self.model]["CPU Generation"] <= cpu_data.CPUGen.penryn.value or \
             self.model in ["MacPro4,1", "MacPro5,1"]
         ):
             return True
@@ -579,6 +579,7 @@ class DetectRootPatch:
             "Settings: Kernel Debug Kit missing":          self.missing_kdk if self.constants.detected_os >= os_data.os_data.ventura.value else False,
             "Validation: Patching Possible":               self.verify_patch_allowed(),
             "Validation: Unpatching Possible":             self._verify_unpatch_allowed(),
+            f"Validation: Unsupported Host OS":            True if self.constants.detected_os > os_data.os_data.ventura and not Path("~/.dortania_developer").expanduser().exists() else False,
             f"Validation: SIP is enabled (Required: {self._check_sip()[2]} or higher)":  self.sip_enabled,
             f"Validation: Currently Booted SIP: ({hex(py_sip_xnu.SipXnu().get_sip_status().value)})":         self.sip_enabled,
             "Validation: SecureBootModel is enabled":      self.sbm_enabled,

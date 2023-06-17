@@ -52,7 +52,7 @@ Note: For AirPort upgrades, only the best/newest cards are listed.
 |   SMBIOS   | WiFi/BT version | UC OOB  | Comment |
 |------------|-----------------|------------|---------|
 | MacBook4,1 | Wi-Fi 4 / BT 2.0 EDR |  <span style="color:red"> NO </span> | Replace stock AirPort card with an mPCIE + USB Connector Adapter board with a BCM94360CS2 card  |
-| MacBook5,1 | ^^ |  ^^ | <span style="color:red"> Use a Broadcom USB Bluetooth 4.0+ Dongle </span> |
+| MacBook5,1 | ^^ |  ^^ | Use a Broadcom USB Bluetooth 4.0+ Dongle </span> |
 | MacBook5,2 | WiFi 4 / BT 2.1 EDR  | ^^ | Replace stock AirPort card with an mPCIE + USB Connector Adapter board with a BCM94360CS2 card  |
 | MacBook6,1 | ^^ | ^^ | Replace stock AirPort card with a BCM94331PCIEBT4CAX/BCM94331PCIEBT4 card |
 | MacBook7,1 | ^^ | ^^ | ^^ |
@@ -209,7 +209,7 @@ Ventura has dropped more models which includes all of the blacklisted Macs in qu
 
 Firstly run the GUI version of OpenCore Legacy Patcher. 
 
-Then go to **Settings**, go to **SMBIOS Settings**, set SMBIOS Spoof Level to **Moderate**. Set SMBIOS Spoof Model **one listed next to your native model in the table for spoofed models below.**
+Then go to **Settings** and **SMBIOS** tab, set SMBIOS Spoof Level to **Moderate**. Set SMBIOS Spoof Model **one listed next to your native model in the table for spoofed models below.**
 
 Notice that "Allow native models" and "Allow Native Spoofs" **are NOT** enabled unlike on Monterey, this is on purpose. They are no longer relevant on Ventura and enabling them will cause boot issues.
 
@@ -239,14 +239,16 @@ Spoofing to any model with native Ventura support should work, but these are the
 
 ::: details macOS Monterey
 
-Firstly, run the GUI version of OpenCore Legacy Patcher. Secondly, go to **Settings** and tick **Allow native models**.
+Firstly, run the GUI version of OpenCore Legacy Patcher. Secondly, go to **Settings** then the **App** tab and tick **Allow native models**.
 
-Then, go to **SMBIOS Settings**, tick **Allow Native Spoofs**, set SMBIOS Spoof Level to **Moderate**. Set SMBIOS Spoof Model to **one listed next to your native model in the table for spoofed models below.**
+[](../images/OCLP-App-Allow-Native-Models.png)
+
+Then, go to **SMBIOS** tab, tick **Allow spoofing native Macs**, set SMBIOS Spoof Level to **Moderate**. Set SMBIOS Spoof Model to **one listed next to your native model in the table for spoofed models below.**
 
 
 | Main Settings view | SMBIOS settings |
 | :--- | :--- |
-| ![](../images/OCLP-allow-native-models.png) | ![](../images/OCLP-smbios-settings.png) |
+| ![](../images/OCLP-SMBIOS-Allow-Native-Spoof.png) | ![](../images/OCLP-smbios-settings.png) |
 
 
 ::: details Table for spoofed models (click to expand)

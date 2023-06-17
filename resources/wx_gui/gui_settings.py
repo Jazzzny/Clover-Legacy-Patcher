@@ -32,6 +32,7 @@ class SettingsFrame(wx.Frame):
     Modal-based Settings Frame
     """
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
+        logging.info("Initializing Settings Frame")
         self.constants: constants.Constants = global_constants
         self.title: str = title
         self.parent: wx.Frame = parent
@@ -194,6 +195,9 @@ class SettingsFrame(wx.Frame):
                 description = wx.StaticText(panel, label=lines, pos=(30 + width, 10 + height + 20))
                 description.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, ".AppleSystemUIFont"))
                 height += 40
+                if "condition" in setting_info:
+                    if setting_info["condition"] is False:
+                        description.SetForegroundColour((128, 128, 128))
 
                 # Check number of lines in description, and adjust spacer accordingly
                 for i, line in enumerate(lines.split('\n')):
@@ -226,7 +230,8 @@ class SettingsFrame(wx.Frame):
         """
 
         models = [model for model in smbios_data.smbios_dictionary if "_" not in model and " " not in model and smbios_data.smbios_dictionary[model]["Board ID"] is not None]
-        socketed_gpu_models = ["iMac9,1", "iMac10,1", "iMac11,1", "iMac11,2", "iMac11,3", "iMac12,1", "iMac12,2", "MacPro3,1", "MacPro4,1", "MacPro5,1", "Xserve2,1", "Xserve3,1"]
+        socketed_imac_models = ["iMac9,1", "iMac10,1", "iMac11,1", "iMac11,2", "iMac11,3", "iMac12,1", "iMac12,2"]
+        socketed_gpu_models = socketed_imac_models + ["MacPro3,1", "MacPro4,1", "MacPro5,1", "Xserve2,1", "Xserve3,1"]
 
         settings = {
             "Build": {
@@ -252,7 +257,7 @@ class SettingsFrame(wx.Frame):
                         "USB 3.0 expansion cards on systems",
                         "without native support.",
                     ],
-                    "condition": not gui_support.CheckProperties(self.constants).host_has_cpu_gen(cpu_data.cpu_data.ivy_bridge) # Sandy Bridge and older do not natively support XHCI booting
+                    "condition": not gui_support.CheckProperties(self.constants).host_has_cpu_gen(cpu_data.CPUGen.ivy_bridge) # Sandy Bridge and older do not natively support XHCI booting
                 },
                 "NVMe Booting": {
                     "type": "checkbox",
@@ -265,7 +270,7 @@ class SettingsFrame(wx.Frame):
                         "Note: Requires Firmware support",
                         "for OpenCore to load from NVMe.",
                     ],
-                    "condition": not gui_support.CheckProperties(self.constants).host_has_cpu_gen(cpu_data.cpu_data.ivy_bridge) # Sandy Bridge and older do not natively support NVMe booting
+                    "condition": not gui_support.CheckProperties(self.constants).host_has_cpu_gen(cpu_data.CPUGen.ivy_bridge) # Sandy Bridge and older do not natively support NVMe booting
                 },
                 "wrap_around 2": {
                     "type": "wrap_around",
@@ -538,6 +543,7 @@ class SettingsFrame(wx.Frame):
                         "Override detected/assumed GPU on",
                         "socketed MXM-based iMacs.",
                     ],
+                    "condition": bool((not self.constants.custom_model and self.constants.computer.real_model in socketed_imac_models) or (self.constants.custom_model and self.constants.custom_model in socketed_imac_models))
                 },
                 "Populate Graphics Override": {
                     "type": "populate",
@@ -692,7 +698,9 @@ class SettingsFrame(wx.Frame):
                     "value": self._get_system_settings("Moraea_DarkMenuBar"),
                     "variable": "Moraea_DarkMenuBar",
                     "description": [
-                        # "Enable Dark Menu Bar",
+                        "If Beta Menu Bar is enabled,",
+                        "menu bar colour will dynamically",
+                        "change as needed.",
                     ],
                     "override_function": self._update_system_defaults,
                     "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
@@ -702,21 +710,44 @@ class SettingsFrame(wx.Frame):
                     "value": self._get_system_settings("Moraea_BlurBeta"),
                     "variable": "Moraea_BlurBeta",
                     "description": [
-                        # "Enable Beta Blur",
+                        "Control window blur behaviour.",
                     ],
                     "override_function": self._update_system_defaults,
                     "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
 
                 },
+                "Beach Ball Cursor Workaround": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Moraea.EnableSpinHack"),
+                    "variable": "Moraea.EnableSpinHack",
+                    "description": [
+                        "Note: May be more CPU intensive.",
+                    ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+                },
                 "wrap_around 2": {
                     "type": "wrap_around",
+                },
+                "Beta Menu Bar": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Amy.MenuBar2Beta"),
+                    "variable": "Amy.MenuBar2Beta",
+                    "description": [
+                        "Supports dynamic colour changes.",
+                        "Note: Setting is still experimental.",
+                        "If you experience issues, please",
+                        "disable this setting.",
+                    ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
                 },
                 "Disable Beta Rim": {
                     "type": "checkbox",
                     "value": self._get_system_settings("Moraea_RimBetaDisabled"),
                     "variable": "Moraea_RimBetaDisabled",
                     "description": [
-                        # "Disable Beta Rim",
+                        "Control Window Rim rendering.",
                     ],
                     "override_function": self._update_system_defaults,
                     "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
@@ -791,6 +822,12 @@ class SettingsFrame(wx.Frame):
                         "If you're already here, I assume you're ok",
                         "bricking your system 🧱.",
                         "Check CHANGELOG before blindly updating.",
+                    ],
+                },
+                "Trigger Exception": {
+                    "type": "button",
+                    "function": self.on_test_exception,
+                    "description": [
                     ],
                 },
                 "wrap_around 1": {
@@ -993,7 +1030,6 @@ Hardware Information:
                             event.GetEventObject().SetValue(not event.GetEventObject().GetValue())
                             return
         if override_function is True:
-            print("Override function")
             self.settings[self._find_parent_for_key(label)][label]["override_function"](self.settings[self._find_parent_for_key(label)][label]["variable"], value, self.settings[self._find_parent_for_key(label)][label]["constants_variable"] if "constants_variable" in self.settings[self._find_parent_for_key(label)][label] else None)
             return
 
@@ -1227,11 +1263,16 @@ Hardware Information:
 
     def on_export_constants(self, event: wx.Event) -> None:
         # Throw pop up to get save location
-        with wx.FileDialog(self.parent, "Save Constants File", wildcard="JSON files (*.txt)|*.txt", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+        with wx.FileDialog(self.parent, "Save Constants File", wildcard="JSON files (*.txt)|*.txt", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"constants-{self.constants.patcher_version}.txt") as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
             # Save the current contents in the file
             pathname = fileDialog.GetPath()
+            logging.info(f"Saving constants to {pathname}")
             with open(pathname, 'w') as file:
                 file.write(pprint.pformat(vars(self.constants), indent=4))
+
+
+    def on_test_exception(self, event: wx.Event) -> None:
+        raise Exception("Test Exception")
