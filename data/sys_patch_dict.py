@@ -817,6 +817,7 @@ class SystemPatchDictionary():
                     },
                     "Install": {
                         "/System/Library/Extensions": {
+                            "AMD10000Controller.kext":        "12.5",
                             "AMDRadeonX5000.kext":            "12.5",
                             "AMDRadeonX5000HWServices.kext":  "12.5",
 
