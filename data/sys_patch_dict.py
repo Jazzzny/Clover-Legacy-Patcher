@@ -818,14 +818,17 @@ class SystemPatchDictionary():
                     "Install": {
                         "/System/Library/Extensions": {
                             "AMD10000Controller.kext":        "12.5",
+                            "AMDFramebuffer.kext":            "12.5",
+                            "AMDSupport.kext":                "12.5",
                             "AMDRadeonX5000.kext":            "12.5",
                             "AMDRadeonX5000HWServices.kext":  "12.5",
-
+                            "AMDRadeonVADriver.bundle":       "12.5",
                             "AMDRadeonVADriver2.bundle":      "12.5",
                             "AMDRadeonX5000GLDriver.bundle":  "12.5",
                             "AMDRadeonX5000MTLDriver.bundle": "12.5",
                             "AMDRadeonX5000Shared.bundle":    "12.5",
 
+                            "AMDMTLBronzeDriver.bundle":      "12.5",
                             "AMDShared.bundle":               "12.5",
                         },
                     },
