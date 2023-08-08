@@ -386,17 +386,6 @@ class DetectRootPatch:
         return False
 
 
-    def _check_whatevergreen(self):
-        """
-        Query whether WhateverGreen.kext is loaded
-
-        Returns:
-            bool: True if loaded, False otherwise
-        """
-
-        return utilities.check_kext_loaded("as.vit9696.WhateverGreen")
-
-
     def _check_os_compat(self) -> bool:
         """
         Base check to ensure patcher is compatible with host OS
@@ -570,7 +559,6 @@ class DetectRootPatch:
             f"Validation: {'AMFI' if self.constants.host_is_hackintosh is True or self._get_amfi_level_needed() > 2 else 'Library Validation'} is enabled":                 self.amfi_enabled if self.amfi_must_disable is True else False,
             "Validation: FileVault is enabled":            self.fv_enabled,
             "Validation: System is dosdude1 patched":      self.dosdude_patched,
-            "Validation: WhateverGreen.kext missing":      self.missing_whatever_green if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True else False,
             "Validation: Force OpenGL property missing":   self.missing_nv_web_opengl  if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True else False,
             "Validation: Network Connection Required":     (not self.has_network) if (self.requires_root_kc and self.missing_kdk and self.constants.detected_os >= os_data.os_data.ventura.value) else False,
         }
@@ -629,7 +617,6 @@ class DetectRootPatch:
 
         if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta]) is True:
             self.missing_nv_web_opengl  = not self._check_nv_web_opengl()
-            self.missing_whatever_green = not self._check_whatevergreen()
 
         if print_errors is True:
             if self.sip_enabled is True:
@@ -660,11 +647,7 @@ class DetectRootPatch:
             if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True:
                 if self.missing_nv_web_opengl is True:
                     logging.info("\nCannot patch! Force OpenGL property missing")
-                    logging.info("Please ensure ngfxgl=1 is set in boot-args")
-
-                if self.missing_whatever_green is True:
-                    logging.info("\nCannot patch! WhateverGreen.kext missing")
-                    logging.info("Please ensure WhateverGreen.kext is installed")
+                    logging.info("Please ensure ngfxgl=1 is set in boot-args")  
 
             if (not self.has_network) if (self.requires_root_kc and self.missing_kdk and self.constants.detected_os >= os_data.os_data.ventura.value) else False:
                 logging.info("\nCannot patch! Network Connection Required")
