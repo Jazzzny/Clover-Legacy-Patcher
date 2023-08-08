@@ -29,8 +29,11 @@ class DetectRootPatch:
 
         # GPU Patch Detection
         self.nvidia_tesla   = False
-        self.kepler_gpu     = False
-        self.nvidia_web     = False
+        self.nvidia_fermi   = False
+        self.nvidia_kepler  = False
+        self.nvidia_maxwell = False
+        self.nvidia_pascal  = False
+        self.nvidia_volta   = False
         self.amd_ts1        = False
         self.amd_ts2        = False
         self.iron_gpu       = False
@@ -55,7 +58,6 @@ class DetectRootPatch:
         self.amfi_must_disable   = False
         self.amfi_shim_bins      = False
         self.supports_metal      = False
-        self.needs_nv_web_checks = False
         self.requires_root_kc    = False
 
         # Validation Checks
@@ -106,24 +108,39 @@ class DetectRootPatch:
                                 self.constants.detected_os_minor > 0
                             )
                         ):
-                            self.kepler_gpu = True
+                            self.nvidia_kepler = True
                             self.supports_metal = True
                             if self.constants.detected_os >= os_data.os_data.ventura:
                                 self.amfi_must_disable = True
                                 if (self.constants.detected_os == os_data.os_data.ventura and self.constants.detected_os_minor >= 4) or self.constants.detected_os > os_data.os_data.ventura:
                                     self.amfi_shim_bins = True
-                elif gpu.arch in [
-                    device_probe.NVIDIA.Archs.Fermi,
-                    device_probe.NVIDIA.Archs.Kepler,
-                    device_probe.NVIDIA.Archs.Maxwell,
-                    device_probe.NVIDIA.Archs.Pascal,
-                ]:
+                elif gpu.arch == device_probe.NVIDIA.Archs.Fermi:
                     if self.constants.detected_os > os_data.os_data.mojave:
-                        self.nvidia_web = True
+                        self.nvidia_fermi = True
                         self.amfi_must_disable = True
                         if os_data.os_data.ventura in self.constants.legacy_accel_support:
                             self.amfi_shim_bins = True
-                        self.needs_nv_web_checks = True
+                        self.requires_root_kc = True
+                elif gpu.arch == device_probe.NVIDIA.Archs.Maxwell:
+                    if self.constants.detected_os > os_data.os_data.mojave:
+                        self.nvidia_maxwell = True
+                        self.amfi_must_disable = True
+                        if os_data.os_data.ventura in self.constants.legacy_accel_support:
+                            self.amfi_shim_bins = True
+                        self.requires_root_kc = True
+                elif gpu.arch == device_probe.NVIDIA.Archs.Pascal:
+                    if self.constants.detected_os > os_data.os_data.mojave:
+                        self.nvidia_pascal = True
+                        self.amfi_must_disable = True
+                        if os_data.os_data.ventura in self.constants.legacy_accel_support:
+                            self.amfi_shim_bins = True
+                        self.requires_root_kc = True
+                elif gpu.arch == device_probe.NVIDIA.Archs.Volta:
+                    if self.constants.detected_os > os_data.os_data.mojave:
+                        self.nvidia_volta = True
+                        self.amfi_must_disable = True
+                        if os_data.os_data.ventura in self.constants.legacy_accel_support:
+                            self.amfi_shim_bins = True
                         self.requires_root_kc = True
                 elif gpu.arch == device_probe.AMD.Archs.TeraScale_1:
                     if self.constants.detected_os > non_metal_os:
@@ -221,7 +238,10 @@ class DetectRootPatch:
             # Avoid patching Metal and non-Metal GPUs if both present, prioritize Metal GPU
             # Main concerns are for iMac12,x with Sandy iGPU and Kepler dGPU
             self.nvidia_tesla = False
-            self.nvidia_web = False
+            self.nvidia_fermi = False
+            self.nvidia_maxwell = False
+            self.nvidia_pascal = False
+            self.nvidia_volta = False
             self.amd_ts1 = False
             self.amd_ts2 = False
             self.iron_gpu = False
@@ -283,7 +303,10 @@ class DetectRootPatch:
 
         # Reset patches needing KDK
         self.nvidia_tesla              = False
-        self.nvidia_web                = False
+        self.nvidia_fermi              = False
+        self.nvidia_maxwell            = False
+        self.nvidia_pascal             = False
+        self.nvidia_volta              = False
         self.amd_ts1                   = False
         self.amd_ts2                   = False
         self.iron_gpu                  = False
@@ -341,23 +364,6 @@ class DetectRootPatch:
         return False
 
 
-    def _check_nv_web_nvram(self):
-        """
-        Query for Nvidia Web Driver property: nvda_drv_vrl or nvda_drv
-
-        Returns:
-            bool: True if property is present, False otherwise
-        """
-
-        nv_on = utilities.get_nvram("boot-args", decode=True)
-        if nv_on:
-            if "nvda_drv_vrl=" in nv_on:
-                return True
-        nv_on = utilities.get_nvram("nvda_drv")
-        if nv_on:
-            return True
-        return False
-
 
     def _check_nv_web_opengl(self):
         """
@@ -376,27 +382,6 @@ class DetectRootPatch:
         for gpu in self.constants.computer.gpus:
             if isinstance(gpu, device_probe.NVIDIA):
                 if gpu.disable_metal is True:
-                    return True
-        return False
-
-
-    def _check_nv_compat(self):
-        """
-        Query for Nvidia Web Driver property: ngfxcompat
-
-        Verify Web Drivers will skip NVDAStartupWeb compatibility check
-
-        Returns:
-            bool: True if property is present, False otherwise
-        """
-
-        nv_on = utilities.get_nvram("boot-args", decode=True)
-        if nv_on:
-            if "ngfxcompat=" in nv_on:
-                return True
-        for gpu in self.constants.computer.gpus:
-            if isinstance(gpu, device_probe.NVIDIA):
-                if gpu.force_compatible is True:
                     return True
         return False
 
@@ -443,13 +428,7 @@ class DetectRootPatch:
         """
 
         if self.constants.detected_os > os_data.os_data.catalina:
-            if self.nvidia_web is True:
-                sip = sip_data.system_integrity_protection.root_patch_sip_big_sur_3rd_part_kexts
-                sip_hex = "0xA03"
-                sip_value = (
-                    f"For Hackintoshes, please set csr-active-config to '030A0000' ({sip_hex})\nFor non-OpenCore Macs, please run 'csrutil disable' and \n'csrutil authenticated-root disable' in RecoveryOS"
-                )
-            elif self.constants.detected_os >= os_data.os_data.ventura:
+            if self.constants.detected_os >= os_data.os_data.ventura:
                 sip = sip_data.system_integrity_protection.root_patch_sip_ventura
                 sip_hex = "0x803"
                 sip_value = (
@@ -556,9 +535,12 @@ class DetectRootPatch:
         self._detect_gpus()
 
         self.root_patch_dict = {
-            "Graphics: Nvidia Tesla":                      self.nvidia_tesla,
-            "Graphics: Nvidia Kepler":                     self.kepler_gpu,
-            "Graphics: Nvidia Web Drivers":                self.nvidia_web,
+            "Graphics: NVIDIA Tesla":                      self.nvidia_tesla,
+            "Graphics: NVIDIA Fermi":                      self.nvidia_fermi,
+            "Graphics: NVIDIA Kepler":                     self.nvidia_kepler,
+            "Graphics: NVIDIA Maxwell":                    self.nvidia_maxwell,
+            "Graphics: NVIDIA Pascal":                     self.nvidia_pascal,
+            "Graphics: NVIDIA Volta":                      self.nvidia_volta,
             "Graphics: AMD TeraScale 1":                   self.amd_ts1,
             "Graphics: AMD TeraScale 2":                   self.amd_ts2,
             "Graphics: AMD Legacy GCN":                    self.legacy_gcn,
@@ -588,10 +570,8 @@ class DetectRootPatch:
             f"Validation: {'AMFI' if self.constants.host_is_hackintosh is True or self._get_amfi_level_needed() > 2 else 'Library Validation'} is enabled":                 self.amfi_enabled if self.amfi_must_disable is True else False,
             "Validation: FileVault is enabled":            self.fv_enabled,
             "Validation: System is dosdude1 patched":      self.dosdude_patched,
-            "Validation: WhateverGreen.kext missing":      self.missing_whatever_green if self.nvidia_web is True else False,
-            "Validation: Force OpenGL property missing":   self.missing_nv_web_opengl  if self.nvidia_web is True else False,
-            "Validation: Force compat property missing":   self.missing_nv_compat      if self.nvidia_web is True else False,
-            "Validation: nvda_drv(_vrl) variable missing": self.missing_nv_web_nvram   if self.nvidia_web is True else False,
+            "Validation: WhateverGreen.kext missing":      self.missing_whatever_green if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True else False,
+            "Validation: Force OpenGL property missing":   self.missing_nv_web_opengl  if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True else False,
             "Validation: Network Connection Required":     (not self.has_network) if (self.requires_root_kc and self.missing_kdk and self.constants.detected_os >= os_data.os_data.ventura.value) else False,
         }
 
@@ -647,10 +627,8 @@ class DetectRootPatch:
 
         self.unsupported_os = not self._check_os_compat()
 
-        if self.nvidia_web is True:
-            self.missing_nv_web_nvram   = not self._check_nv_web_nvram()
+        if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta]) is True:
             self.missing_nv_web_opengl  = not self._check_nv_web_opengl()
-            self.missing_nv_compat      = not self._check_nv_compat()
             self.missing_whatever_green = not self._check_whatevergreen()
 
         if print_errors is True:
@@ -679,18 +657,10 @@ class DetectRootPatch:
                 logging.info("\nCannot patch! Detected machine has already been patched by another patcher")
                 logging.info("Please ensure your install is either clean or patched with OpenCore Legacy Patcher")
 
-            if self.nvidia_web is True:
+            if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True:
                 if self.missing_nv_web_opengl is True:
                     logging.info("\nCannot patch! Force OpenGL property missing")
                     logging.info("Please ensure ngfxgl=1 is set in boot-args")
-
-                if self.missing_nv_compat is True:
-                    logging.info("\nCannot patch! Force Nvidia compatibility property missing")
-                    logging.info("Please ensure ngfxcompat=1 is set in boot-args")
-
-                if self.missing_nv_web_nvram is True:
-                    logging.info("\nCannot patch! nvda_drv(_vrl) variable missing")
-                    logging.info("Please ensure nvda_drv_vrl=1 is set in boot-args")
 
                 if self.missing_whatever_green is True:
                     logging.info("\nCannot patch! WhateverGreen.kext missing")
@@ -713,10 +683,8 @@ class DetectRootPatch:
                 self.amfi_enabled if self.amfi_must_disable is True else False,
 
                 # Web Driver specific
-                self.missing_nv_web_nvram   if self.nvidia_web is True  else False,
-                self.missing_nv_web_opengl  if self.nvidia_web is True  else False,
-                self.missing_nv_compat      if self.nvidia_web is True  else False,
-                self.missing_whatever_green if self.nvidia_web is True  else False,
+                self.missing_nv_web_opengl  if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True  else False,
+                self.missing_whatever_green if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True  else False,
 
                 # KDK specific
                 (not self.has_network) if (self.requires_root_kc and self.missing_kdk and self.constants.detected_os >= os_data.os_data.ventura.value) else False

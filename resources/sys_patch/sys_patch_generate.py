@@ -82,33 +82,61 @@ class GenerateRootPatchSets:
             required_patches.update({"Monterey OpenCL": all_hardware_patchset["Graphics"]["Monterey OpenCL"]})
             required_patches.update({"Intel Skylake": all_hardware_patchset["Graphics"]["Intel Skylake"]})
 
-        if self.hardware_details["Graphics: Nvidia Tesla"] is True:
+        if self.hardware_details["Graphics: NVIDIA Tesla"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
-            required_patches.update({"Nvidia Tesla": all_hardware_patchset["Graphics"]["Nvidia Tesla"]})
+            required_patches.update({"NVIDIA Tesla": all_hardware_patchset["Graphics"]["NVIDIA Tesla"]})
 
-        if self.hardware_details["Graphics: Nvidia Web Drivers"] is True:
+        if self.hardware_details["Graphics: NVIDIA Fermi"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
             required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
             required_patches.update({"Non-Metal CoreDisplay Common": all_hardware_patchset["Graphics"]["Non-Metal CoreDisplay Common"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
-            required_patches.update({"Nvidia Web Drivers": all_hardware_patchset["Graphics"]["Nvidia Web Drivers"]})
+            required_patches.update({"NVIDIA Web Driver Common": all_hardware_patchset["Graphics"]["NVIDIA Web Driver Common"]})
+            required_patches.update({"NVIDIA Fermi": all_hardware_patchset["Graphics"]["NVIDIA Fermi"]})
             required_patches.update({"Non-Metal Enforcement": all_hardware_patchset["Graphics"]["Non-Metal Enforcement"]})
 
-        if self.hardware_details["Graphics: Nvidia Kepler"] is True:
+        if self.hardware_details["Graphics: NVIDIA Kepler"] is True:
             required_patches.update({"Metal 3802 Common": all_hardware_patchset["Graphics"]["Metal 3802 Common"]})
             required_patches.update({"Metal 3802 Common Extended": all_hardware_patchset["Graphics"]["Metal 3802 Common Extended"]})
             required_patches.update({"Catalina GVA": all_hardware_patchset["Graphics"]["Catalina GVA"]})
             required_patches.update({"Monterey OpenCL": all_hardware_patchset["Graphics"]["Monterey OpenCL"]})
             required_patches.update({"Big Sur OpenCL": all_hardware_patchset["Graphics"]["Big Sur OpenCL"]})
             required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
-            required_patches.update({"Nvidia Kepler": all_hardware_patchset["Graphics"]["Nvidia Kepler"]})
+            required_patches.update({"NVIDIA Kepler": all_hardware_patchset["Graphics"]["NVIDIA Kepler"]})
             for gpu in self.constants.computer.gpus:
                 # Handle mixed GPU situations (ie. MacBookPro11,3: Haswell iGPU + Kepler dGPU)
                 if gpu.arch == device_probe.Intel.Archs.Haswell:
                     if "Catalina GVA" in required_patches:
                         del(required_patches["Catalina GVA"])
                     break
+        
+        if self.hardware_details["Graphics: NVIDIA Maxwell"] is True:
+            required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
+            required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
+            required_patches.update({"Non-Metal CoreDisplay Common": all_hardware_patchset["Graphics"]["Non-Metal CoreDisplay Common"]})
+            required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
+            required_patches.update({"NVIDIA Web Driver Common": all_hardware_patchset["Graphics"]["NVIDIA Web Driver Common"]})
+            required_patches.update({"NVIDIA Maxwell": all_hardware_patchset["Graphics"]["NVIDIA Maxwell"]})
+            required_patches.update({"Non-Metal Enforcement": all_hardware_patchset["Graphics"]["Non-Metal Enforcement"]})
+
+        if self.hardware_details["Graphics: NVIDIA Pascal"] is True:
+            required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
+            required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
+            required_patches.update({"Non-Metal CoreDisplay Common": all_hardware_patchset["Graphics"]["Non-Metal CoreDisplay Common"]})
+            required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
+            required_patches.update({"NVIDIA Web Driver Common": all_hardware_patchset["Graphics"]["NVIDIA Web Driver Common"]})
+            required_patches.update({"NVIDIA Pascal": all_hardware_patchset["Graphics"]["NVIDIA Pascal"]})
+            required_patches.update({"Non-Metal Enforcement": all_hardware_patchset["Graphics"]["Non-Metal Enforcement"]})
+
+        if self.hardware_details["Graphics: NVIDIA Volta"] is True:
+            required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
+            required_patches.update({"Non-Metal IOAccelerator Common": all_hardware_patchset["Graphics"]["Non-Metal IOAccelerator Common"]})
+            required_patches.update({"Non-Metal CoreDisplay Common": all_hardware_patchset["Graphics"]["Non-Metal CoreDisplay Common"]})
+            required_patches.update({"WebKit Monterey Common": all_hardware_patchset["Graphics"]["WebKit Monterey Common"]})
+            required_patches.update({"NVIDIA Web Driver Common": all_hardware_patchset["Graphics"]["NVIDIA Web Driver Common"]})
+            required_patches.update({"NVIDIA Volta": all_hardware_patchset["Graphics"]["NVIDIA Volta"]})
+            required_patches.update({"Non-Metal Enforcement": all_hardware_patchset["Graphics"]["Non-Metal Enforcement"]})
 
         if self.hardware_details["Graphics: AMD TeraScale 1"] is True:
             required_patches.update({"Non-Metal Common": all_hardware_patchset["Graphics"]["Non-Metal Common"]})
