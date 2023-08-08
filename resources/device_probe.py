@@ -308,12 +308,12 @@ class NVIDIA(GPU):
         Kepler = "Kepler"
         Maxwell = "Maxwell"
         Pascal = "Pascal"
+        Volta = "Volta"
         Unknown = "Unknown"
 
     arch: Archs = field(init=False)
 
     def detect_arch(self):
-        # G80/G80GL
         if self.device_id in pci_data.nvidia_ids.curie_ids:
             self.arch = NVIDIA.Archs.Curie
         elif self.device_id in pci_data.nvidia_ids.tesla_ids:
@@ -326,6 +326,8 @@ class NVIDIA(GPU):
             self.arch = NVIDIA.Archs.Maxwell
         elif self.device_id in pci_data.nvidia_ids.pascal_ids:
             self.arch = NVIDIA.Archs.Pascal
+        elif self.device_id in pci_data.nvidia_ids.volta_ids:
+            self.arch = NVIDIA.Archs.Volta
         else:
             self.arch = NVIDIA.Archs.Unknown
 

@@ -705,6 +705,11 @@ class nvidia_ids:
         0x1d56,	# GP108BM [GeForce MX330]
     ]
 
+    volta_ids = [
+        # Someone should spend $4000 on one of these
+        0x1d81,	# GV100 [TITAN V]
+        0x1dba, # GV100 [Titan V CEO Edition/Quadro GV100]
+    ]
 
 class amd_ids:
 

@@ -527,8 +527,8 @@ class SystemPatchDictionary():
                     },
                 },
 
-                "Nvidia Tesla": {
-                    "Display Name": "Graphics: Nvidia Tesla",
+                "NVIDIA Tesla": {
+                    "Display Name": "Graphics: NVIDIA Tesla",
                     "OS Support": {
                         "Minimum OS Support": {
                             "OS Major": os_data.os_data.mojave,
@@ -552,8 +552,8 @@ class SystemPatchDictionary():
                         },
                     },
                 },
-                "Nvidia Kepler": {
-                    "Display Name": "Graphics: Nvidia Kepler",
+                "NVIDIA Kepler": {
+                    "Display Name": "Graphics: NVIDIA Kepler",
                     "OS Support": {
                         "Minimum OS Support": {
                             # 12.0 beta 7 (XNU 21.1)
@@ -586,8 +586,8 @@ class SystemPatchDictionary():
                         },
                     },
                 },
-                "Nvidia Web Drivers": {
-                    "Display Name": "Graphics: Nvidia Web Drivers",
+                "NVIDIA Web Driver Common": {
+                    "Display Name": "",
                     "OS Support": {
                         "Minimum OS Support": {
                             "OS Major": os_data.os_data.mojave,
@@ -600,55 +600,112 @@ class SystemPatchDictionary():
                     },
                     "Install": {
                         "/System/Library/Extensions": {
-                            "GeForceAIRPluginWeb.bundle":     "WebDriver-387.10.10.10.40.140",
-                            "GeForceGLDriverWeb.bundle":      "WebDriver-387.10.10.10.40.140",
-                            "GeForceMTLDriverWeb.bundle":     "WebDriver-387.10.10.10.40.140",
-                            "GeForceVADriverWeb.bundle":      "WebDriver-387.10.10.10.40.140",
-
-                            # Tesla-only files
-                            "GeForceTeslaGAWeb.bundle":       "WebDriver-387.10.10.10.40.140",
-                            "GeForceTeslaGLDriverWeb.bundle": "WebDriver-387.10.10.10.40.140",
-                            "GeForceTeslaVADriverWeb.bundle": "WebDriver-387.10.10.10.40.140",
+                            "GeForceWeb.kext":                "WebDriver-387.10.10.15.15.108",
+                            "NVDAResmanWeb.kext":             "WebDriver-387.10.10.15.15.108",
+                            "NVDAStartupWeb.kext":            "WebDriver-387.10.10.15.15.108-Jazzzny",
+                            "GeForceAIRPluginWeb.bundle":     "WebDriver-387.10.10.15.15.108",
+                            "GeForceGLDriverWeb.bundle":      "WebDriver-387.10.10.15.15.108",
+                            "GeForceMTLDriverWeb.bundle":     "WebDriver-387.10.10.15.15.108",
+                            "GeForceVADriverWeb.bundle":      "WebDriver-387.10.10.15.15.108",
                         },
                         "/System/Library/PrivateFrameworks": {
-                            # Restore OpenCL by adding missing compiler files
                             **({ "GPUCompiler.framework": "11.6"} if self.os_major >= os_data.os_data.monterey else {}),
                         },
                     },
-                    "Install Non-Root": {
-                        "/Library/Extensions": {
-                            "GeForceWeb.kext":                "WebDriver-387.10.10.10.40.140",
-                            "NVDAGF100HalWeb.kext":           "WebDriver-387.10.10.10.40.140",
-                            "NVDAGK100HalWeb.kext":           "WebDriver-387.10.10.10.40.140",
-                            "NVDAGM100HalWeb.kext":           "WebDriver-387.10.10.10.40.140",
-                            "NVDAGP100HalWeb.kext":           "WebDriver-387.10.10.10.40.140",
-                            "NVDAResmanWeb.kext":             "WebDriver-387.10.10.10.40.140",
-                            "NVDAStartupWeb.kext":            "WebDriver-387.10.10.10.40.140",
-
-                            # Tesla-only files
-                            "GeForceTeslaWeb.kext":           "WebDriver-387.10.10.10.40.140",
-                            "NVDANV50HalTeslaWeb.kext":       "WebDriver-387.10.10.10.40.140",
-                            "NVDAResmanTeslaWeb.kext":        "WebDriver-387.10.10.10.40.140",
+                },
+                "NVIDIA Fermi": {
+                    "Display Name": "Graphics: NVIDIA Fermi",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": os_data.os_data.mojave,
+                            "OS Minor": 0
                         },
-
-                        # Disabled due to issues with Pref pane stripping 'nvda_drv' NVRAM
-                        # variables
-                        # "/Library/PreferencePanes": {
-                        #     "NVIDIA Driver Manager.prefPane": "WebDriver-387.10.10.10.40.140",
-                        # },
-                        #  "/Library/LaunchAgents": {
-                        #     "com.nvidia.nvagent.plist":       "WebDriver-387.10.10.10.40.140",
-                        # },
-                        # "/Library/LaunchDaemons": {
-                        #     "com.nvidia.nvroothelper.plist":  "WebDriver-387.10.10.10.40.140",
-                        # },
+                        "Maximum OS Support": {
+                            "OS Major": os_data.os_data.max_os,
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Library/Extensions": {
+                            "NVDAGF100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
+                        },
+                    },
+                },
+                "NVIDIA Kepler Web": { # For non-metal development only
+                    "Display Name": "Graphics: NVIDIA Kepler Web",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": os_data.os_data.mojave,
+                            "OS Minor": 0
+                        },
+                        "Maximum OS Support": {
+                            "OS Major": os_data.os_data.max_os,
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Library/Extensions": {
+                            "NVDAGK100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
+                        },
                     },
                     "Remove": {
                         "/System/Library/Extensions": [
-                            # Due to how late the Auxiliary cache loads, NVDAStartup will match first and then the Web Driver kexts.
-                            # This has no effect for Maxwell and Pascal, however for development purposes, Tesla and Kepler are partially supported.
                             "NVDAStartup.kext",
                         ],
+                    },
+                },
+                "NVIDIA Maxwell": {
+                    "Display Name": "Graphics: NVIDIA Maxwell",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": os_data.os_data.mojave,
+                            "OS Minor": 0
+                        },
+                        "Maximum OS Support": {
+                            "OS Major": os_data.os_data.max_os,
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Library/Extensions": {
+                            "NVDAGM100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
+                        },
+                    },
+                },
+                "NVIDIA Pascal": {
+                    "Display Name": "Graphics: NVIDIA Pascal",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": os_data.os_data.mojave,
+                            "OS Minor": 0
+                        },
+                        "Maximum OS Support": {
+                            "OS Major": os_data.os_data.max_os,
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Library/Extensions": {
+                            "NVDAGP100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
+                        },
+                    },
+                },
+                "NVIDIA Volta": {
+                    "Display Name": "Graphics: NVIDIA Volta",
+                    "OS Support": {
+                        "Minimum OS Support": {
+                            "OS Major": os_data.os_data.mojave,
+                            "OS Minor": 0
+                        },
+                        "Maximum OS Support": {
+                            "OS Major": os_data.os_data.max_os,
+                            "OS Minor": 99
+                        },
+                    },
+                    "Install": {
+                        "/System/Library/Extensions": {
+                            "NVDAGV100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
+                        },
                     },
                 },
                 "AMD TeraScale Common": {
