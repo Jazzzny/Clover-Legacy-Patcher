@@ -645,6 +645,7 @@ class SystemPatchDictionary():
                     },
                     "Install": {
                         "/System/Library/Extensions": {
+                            "NVDAGF100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
                             "NVDAGK100HalWeb.kext": "WebDriver-387.10.10.15.15.108",
                         },
                     },

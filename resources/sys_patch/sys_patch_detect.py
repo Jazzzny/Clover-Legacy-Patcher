@@ -70,10 +70,7 @@ class DetectRootPatch:
         self.has_network     = False
         self.unsupported_os  = False
 
-        self.missing_whatever_green = False
-        self.missing_nv_web_nvram   = False
         self.missing_nv_web_opengl  = False
-        self.missing_nv_compat      = False
 
 
     def _detect_gpus(self):
@@ -666,8 +663,7 @@ class DetectRootPatch:
                 self.amfi_enabled if self.amfi_must_disable is True else False,
 
                 # Web Driver specific
-                self.missing_nv_web_opengl  if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True  else False,
-                self.missing_whatever_green if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta])  is True  else False,
+                self.missing_nv_web_opengl  if any([self.nvidia_fermi,self.nvidia_maxwell,self.nvidia_pascal,self.nvidia_volta]) is True else False,
 
                 # KDK specific
                 (not self.has_network) if (self.requires_root_kc and self.missing_kdk and self.constants.detected_os >= os_data.os_data.ventura.value) else False
