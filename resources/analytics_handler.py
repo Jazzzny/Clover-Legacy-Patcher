@@ -5,7 +5,6 @@ import json
 
 from resources import network_handler, constants, global_settings
 
-
 DATE_FORMAT:      str = "%Y-%m-%d %H-%M-%S"
 ANALYTICS_SERVER: str = ""
 SITE_KEY:         str = ""
@@ -133,6 +132,3 @@ class Analytics:
         if SITE_KEY == "":
             return
         network_handler.NetworkUtilities().post(ANALYTICS_SERVER, json = self.data)
-
-
-

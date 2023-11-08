@@ -42,6 +42,32 @@ class AutoUpdateStages:
     FINISHED = 5
 
 
+class Centre:
+
+    def __init__(self, frame: wx.Frame, global_constants: constants.Constants) -> None:
+        self.frame: wx.Frame = frame
+        self.constants: constants.Constants = global_constants
+
+        self._centre()
+
+
+    def _centre(self) -> None:
+        """
+        Calculate centre position of screen and set window position
+        """
+
+        """This is done as larger modals tend to crash into the dock because of where it is placed"""
+
+        screen_resolution = wx.DisplaySize()
+        window_size = self.frame.GetSize()
+
+        # Calculate window position
+        x_pos = int((screen_resolution[0] - window_size[0]) / 2)
+        y_pos = int((screen_resolution[1] - window_size[1]) / 3)
+
+        self.frame.SetPosition((x_pos, y_pos))
+
+
 class GenerateMenubar:
 
     def __init__(self, frame: wx.Frame, global_constants: constants.Constants) -> None:

@@ -51,7 +51,7 @@ class macOSInstallerDownloadFrame(wx.Frame):
         Convert icon to bitmap
         """
         return wx.Bitmap(wx.Bitmap(icon, wx.BITMAP_TYPE_ICON).ConvertToImage().Rescale(size[0], size[1], wx.IMAGE_QUALITY_HIGH))
-    
+
     def _macos_version_to_icon(self, version: int) -> int:
         """
         Convert macOS version to icon
@@ -61,7 +61,6 @@ class macOSInstallerDownloadFrame(wx.Frame):
             return version - 19
         except IndexError:
             return 0
-
 
     def _generate_elements(self, frame: wx.Frame = None) -> None:
         """
@@ -96,14 +95,13 @@ class macOSInstallerDownloadFrame(wx.Frame):
         # Set size of frame
         frame.SetSize((-1, return_button.GetPosition()[1] + return_button.GetSize()[1] + 40))
 
-
     def _generate_catalog_frame(self) -> None:
         """
         Generate frame to display available installers
         """
         super(macOSInstallerDownloadFrame, self).__init__(None, title=self.title, size=(300, 200), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         gui_support.GenerateMenubar(self, self.constants).generate()
-        self.Centre()
+        gui_support.Centre(self, self.constants)
 
         # Title: Pulling installer catalog
         title_label = wx.StaticText(self, label="Finding Available Software", pos=(-1,5))
@@ -143,20 +141,19 @@ class macOSInstallerDownloadFrame(wx.Frame):
         """
         Display available installers in frame
         """
-        
 
         bundles = [wx.BitmapBundle.FromBitmaps(icon) for icon in self.icons]
-        
+
         self.frame_modal.Destroy()
         self.frame_modal = wx.Dialog(self, title="Select macOS Installer", size=(460, 500))
 
         # Title: Select macOS Installer
         title_label = wx.StaticText(self.frame_modal, label="Select macOS Installer", pos=(-1,-1))
         title_label.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
-        
+
         # macOS Installers list
         id = wx.NewIdRef()
-        
+
         self.list = wx.ListCtrl(self.frame_modal, id, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_NO_HEADER | wx.BORDER_SUNKEN)
         self.list.SetSmallImages(bundles)
 
@@ -226,7 +223,7 @@ class macOSInstallerDownloadFrame(wx.Frame):
 
         checkboxsizer = wx.BoxSizer(wx.HORIZONTAL)
         checkboxsizer.Add(self.showolderversions_checkbox, 0, wx.ALIGN_CENTRE | wx.RIGHT, 5)
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
         sizer.Add(title_label, 0, wx.ALIGN_CENTRE | wx.ALL, 0)
@@ -253,15 +250,14 @@ class macOSInstallerDownloadFrame(wx.Frame):
 
             wx.MessageDialog(self.frame_modal, "Download link copied to clipboard", "", wx.OK | wx.ICON_INFORMATION).ShowModal()
 
-            
     def on_select_list(self, event):
         if self.list.GetSelectedItemCount() > 0:
             self.select_button.Enable()
-            self.copy_button.Enable()  
+            self.copy_button.Enable()
         else:
             self.select_button.Disable()
             self.copy_button.Disable()
-            
+
     def on_download_installer(self, installers: dict) -> None:
         """
         Download macOS installer
@@ -322,7 +318,7 @@ class macOSInstallerDownloadFrame(wx.Frame):
 
             self._validate_installer(list(installers.values())[selected_item]['integrity'])
 
-        
+
     def _validate_installer(self, chunklist_link: str) -> None:
         """
         Validate macOS installer
