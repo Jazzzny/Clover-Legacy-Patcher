@@ -144,7 +144,7 @@ The patcher is designed to target **macOS Big Sur 11.x to macOS Sonoma 14.x**.
 
 | Model Name | Identifier | Tagged Issues |
 | :--- | :--- | :--- |
-| Xserve (Early 2008) | `Xserve2,1` | - Recommend upgrade to Metal GPU<br>- [non-Metal GPU (macOS 11+)](https://github.com/dortania/OpenCore-Legacy-Patcher/issues/108)<br>- [USB 1.1 (macOS 13+)](https://github.com/dortania/OpenCore-Legacy-Patcher/issues/1021)
-| Xserve (Early 2009) | `Xserve3,1` | ^^ |
+| Xserve (Early 2008) | `Xserve2,1` | - No GPU acceleration with stock graphics card<br>- Recommend upgrade to Metal GPU<br>- [USB 1.1 (macOS 13+)](https://github.com/dortania/OpenCore-Legacy-Patcher/issues/1021) |
+| Xserve (Early 2009) | `Xserve3,1` | - Recommend upgrade to Metal GPU<br>- [non-Metal GPU (macOS 11+)](https://github.com/dortania/OpenCore-Legacy-Patcher/issues/108)<br>- [USB 1.1 (macOS 13+)](https://github.com/dortania/OpenCore-Legacy-Patcher/issues/1021) |
 
 # Once you've verified your hardware is supported, head to [Download and build macOS Installers](./INSTALLER.md)
