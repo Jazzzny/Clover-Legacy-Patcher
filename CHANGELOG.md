@@ -1,5 +1,9 @@
 # OpenCore Legacy Patcher changelog
 
+## 1.3.0
+- Resolve `TeraScale 2 Acceleration` checkbox in Settings not being saved
+  - Thanks @rtd1250
+
 ## 1.2.0
 - Resolve application not existing if user dismisses an update instead of installing
 - Resolve lldb crashes on extracted binaries
@@ -9,10 +13,11 @@
 - Resolve missing NFC firmware on T1 Macs
 - Update non-Metal Binaries for macOS Sonoma:
   - Resolve Photos app crash
+  - Resolve loginwindow crashes
   - Workaround tile window popup freezing apps by disabling the feature
   - Workaround monochrome desktop widgets rendering issues by enforcing full color (can be disabled in OCLP settings)
 - Add new arguments:
-  - `--cache_os`: Cache nessasary patcher files for OS to be installed (ex. KDKs)
+  - `--cache_os`: Cache necessary patcher files for OS to be installed (ex. KDKs)
   - `--prepare_for_update`: Clean up patcher files for OS to be installed (ex. /Library/Extensions)
 - Add new Launch Daemons for handling macOS updates:
   - `macos-update.plist`:
@@ -32,6 +37,7 @@
 - Resolve i210 NIC support for macOS Sonoma
 - Increment Binaries:
   - PatcherSupportPkg 1.4.5 - release
+  - OpenCorePkg 0.9.6 - release
 
 ## 1.1.0
 - Resolve rendering issues on Intel Broadwell iGPUs
